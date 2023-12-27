@@ -1,0 +1,105 @@
+name: Gradle Package
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - v*
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get Version Name
+        id: version_name
+        run: |
+         echo version=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+          settings-path: ${{ github.workspace }} # location for the settings.xml file
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.9.0
+        with:
+          arguments: build
+        env:
+          VERSION: ${{ steps.version_name.outputs.version }}
+
+      - name: Generate Release Hash
+        id: hash
+        run: echo "$(git rev-parse --short HEAD)" > hash.env
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jar
+          path: build/libs/terminal-colors-*.jar
+
+      - name: Upload Hash
+        uses: actions/upload-artifact@v3
+        with:
+          name: hash
+          path: hash.env
+
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jar
+          path: tmp
+
+      - name: Download Hash
+        uses: actions/download-artifact@v3
+        with:
+          name: hash
+          path: tmp
+      - name: Get Version Name
+        id: version_name
+        run: |
+         echo version=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+          settings-path: ${{ github.workspace }} # location for the settings.xml file
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.9.0
+        with:
+          arguments: publish
+        env:
+          KETTINGUSERNAME: ${{ secrets.KETTINGUSERNAME }}
+          KETTINGPASSWORD: ${{ secrets.KETTINGPASSWORD }}
+          VERSION: ${{ steps.version_name.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        run: |
+          gh release create "v$VERSION" tmp/terminal-colors-*.jar \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="${GITHUB_REPOSITORY#*/} v$VERSION" \
+              --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version_name.outputs.version }}

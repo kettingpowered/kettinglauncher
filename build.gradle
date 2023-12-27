@@ -1,0 +1,145 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'org.javamodularity.moduleplugin' version '1.8.3' apply false
+    id 'net.minecraftforge.gradleutils' version '2.3.5'
+}
+
+import net.minecraftforge.gradleutils.PomUtils
+import org.kettingpowered.task.Util
+
+import java.util.stream.Collectors
+
+Util.init()
+
+group = 'org.kettingpowered'
+version = System.getenv("VERSION") ?: 'dev-ver'
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://nexus.c0d3m4513r.com/repository/Ketting/' }
+    maven { url = 'https://nexus.c0d3m4513r.com/repository/Forge/' }
+    mavenLocal()
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
+
+configurations {
+    implementation.canBeResolved = true
+    transitive.extendsFrom(implementation)
+}
+
+dependencies {
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+    implementation 'org.kettingpowered:kettingcommon:0.0.1'
+    implementation 'com.google.code.gson:gson:2.10.1' //Used in Patcher
+    implementation 'me.tongfei:progressbar:0.10.0' //Used to display progress
+    transitive 'org.jline:jline-reader:3.21.0' //needed for progressbar
+    transitive 'org.jline:jline-terminal:3.21.0' //needed for progressbar
+
+    //Used in Processors
+    implementation 'net.minecraftforge:binarypatcher:1.2.0:fatjar'
+    implementation 'net.minecraftforge:installertools:1.4.0'
+    implementation 'net.minecraftforge:jarsplitter:1.1.4'
+    implementation 'net.minecraftforge:ForgeAutoRenamingTool:1.0.6'
+    implementation 'org.jetbrains:annotations:24.0.0'
+}
+
+ext{
+    mainClass = 'org.kettingpowered.launcher.KettingLauncher'
+}
+
+tasks.register('generateKettingLauncherLibraries', org.kettingpowered.task.GenerateLibs) {
+    configuration = 'transitive'
+}
+
+jar{
+    dependsOn generateKettingLauncherLibraries
+    mustRunAfter generateKettingLauncherLibraries
+
+    from(generateKettingLauncherLibraries.output) {
+        rename {
+            "data/launcher_libraries.txt"
+        }
+    }
+    def classPath = configurations.named("transitive")
+            .get()
+            .getResolvedConfiguration()
+            .getResolvedArtifacts()
+            .stream()
+            .map { dep ->
+                def art = dep.moduleVersion.id
+                def path = art.group.replace('.', '/') + "/" + art.name + "/" + art.version + "/" + art.name + "-" + art.version
+
+                if (dep.classifier != null) {
+                    path += "-" + dep.classifier
+                }
+
+                if (dep.extension != null) {
+                    path += "." + dep.extension
+                }
+                return "libraries/" + path
+            }.collect(Collectors.joining(" "))
+    manifest{
+        attributes 'Main-Class': mainClass
+        attributes 'Class-Path': classPath
+        attributes([
+        "Specification-Title": "Kettingpowered",
+        "Specification-Vendor": "Kettingpowered",
+        "Implementation-Title": "Ketting",
+        "Implementation-Version": version,
+        "Implementation-Vendor": "Kettingpowered",
+        ], "org/kettingpowered/launcher")
+    }
+}
+
+publishing {
+    publications.register('mavenJava', MavenPublication).configure {
+        from components.java
+        artifact source: generateKettingLauncherLibraries.output, classifier: 'libraries'
+        artifactId = 'kettinglauncher'
+        pom {
+            name = project.name
+            description = 'Launcher for the Ketting server'
+            url = "https://github.com/kettingpowered/kettinglauncher"
+            developers {
+                developer {
+                    id = "justred23"
+                    name = "JustRed23"
+                }
+                developer {
+                    id = "c0d3m4513r"
+                    name = "C0D3 M4513R"
+                }
+            }
+            scm {
+                connection = "scm:git:https://github.com/kettingpowered/kettinglauncher.git"
+                //developerConnection = "scm:svn:https://subversion.example.com/svn/project/trunk/"
+                url = "https://github.com/kettingpowered/kettinglauncher"
+            }
+            PomUtils.setGitHubDetails(pom, 'kettingpowered', 'kettinglauncher')
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kettingpowered/kettinglauncher")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+        maven {
+            name = 'kettingRepo'
+            credentials {
+                username = System.getenv("KETTINGUSERNAME")
+                password = System.getenv("KETTINGPASSWORD")
+            }
+            url = "https://nexus.c0d3m4513r.com/repository/Ketting/"
+        }
+    }
+}
