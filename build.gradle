@@ -49,7 +49,7 @@ dependencies {
 }
 
 ext{
-    mainClass = 'org.kettingpowered.launcher.KettingLauncher'
+    mainClass = 'org.kettingpowered.launcher.Main'
 }
 
 tasks.register('generateKettingLauncherLibraries', org.kettingpowered.task.GenerateLibs) {
@@ -65,27 +65,9 @@ jar{
             "data/launcher_libraries.txt"
         }
     }
-    def classPath = configurations.named("transitive")
-            .get()
-            .getResolvedConfiguration()
-            .getResolvedArtifacts()
-            .stream()
-            .map { dep ->
-                def art = dep.moduleVersion.id
-                def path = art.group.replace('.', '/') + "/" + art.name + "/" + art.version + "/" + art.name + "-" + art.version
-
-                if (dep.classifier != null) {
-                    path += "-" + dep.classifier
-                }
-
-                if (dep.extension != null) {
-                    path += "." + dep.extension
-                }
-                return "libraries/" + path
-            }.collect(Collectors.joining(" "))
     manifest{
         attributes 'Main-Class': mainClass
-        attributes 'Class-Path': classPath
+        attributes 'Launcher-Agent-Class': mainClass
         attributes([
         "Specification-Title": "Kettingpowered",
         "Specification-Vendor": "Kettingpowered",

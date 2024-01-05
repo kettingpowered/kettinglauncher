@@ -7,6 +7,7 @@ public final class AvailableMavenRepos {
     public static final List<String> INSTANCE = List.of(
             "https://nexus.c0d3m4513r.com/repository/Ketting/",
             "https://nexus.c0d3m4513r.com/repository/Ketting-Server-Releases/",
+            "https://nexus.c0d3m4513r.com/repository/Ketting-Testing/", //Todo: dev only. Remove when everything is done!
             "https://nexus.c0d3m4513r.com/repository/Magma/",
             "https://repo1.maven.org/maven2/",
             "https://libraries.minecraft.net/",

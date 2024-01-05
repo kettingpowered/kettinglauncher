@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class KettingLauncher {
-    public static final String Version = (KettingConstants.class.getPackage().getImplementationVersion() != null) ? KettingConstants.class.getPackage().getImplementationVersion() : "dev-env";
+    public static final String Version = (KettingLauncher.class.getPackage().getImplementationVersion() != null) ? KettingLauncher.class.getPackage().getImplementationVersion() : "dev-env";
     public static final String ArtifactID = "kettinglauncher";
     public static final int BufferSize = 1024*1024*32;
 
@@ -39,22 +39,8 @@ public class KettingLauncher {
     
     private final ParsedArgs args;
     private final Libraries libs = new Libraries();
-
-    public static void main(String[] args) throws Exception {
-        //These shall be strictly Launcher libs.
-        //No wierd classpath shenanigans necessary, because the Class-Path is set in the Manifest.
-        //Even if those libs don't exist in the FileSystem yet
-        final Libraries libs = new Libraries();
-        //Download all needed libs for the Launcher itself
-        try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(KettingLauncher.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
-            libs.downloadExternal(stream.lines().map(Dependency::parse).filter(Optional::isPresent).map(Optional::get).toList(), false);
-        }
-        
-        final KettingLauncher launcher = new KettingLauncher(args);
-        launcher.launch();
-    }
     
-    private KettingLauncher(String[] str_args) throws Exception {
+    KettingLauncher(String[] str_args) throws Exception {
         Path eula = Paths.get("eula.txt");
         BetterUI ui = new BetterUI(KettingConstants.NAME);
         args = new Args(str_args).parse(ui, eula);
@@ -103,7 +89,7 @@ public class KettingLauncher {
         new Patcher();
     }
 
-    private void launch() {
+    void launch() {
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
