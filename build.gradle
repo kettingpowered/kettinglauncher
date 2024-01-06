@@ -13,7 +13,7 @@ import java.util.stream.Collectors
 Util.init()
 
 group = 'org.kettingpowered'
-version = System.getenv("VERSION") ?: 'dev-ver'
+version = System.getenv("VERSION") ?: 'dev-env'
 
 repositories {
     mavenCentral()
@@ -74,7 +74,7 @@ jar{
         "Implementation-Title": "Ketting",
         "Implementation-Version": version,
         "Implementation-Vendor": "Kettingpowered",
-        ], "org/kettingpowered/launcher")
+        ], "org/kettingpowered/launcher/")
     }
 }
 

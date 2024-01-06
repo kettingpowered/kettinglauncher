@@ -191,7 +191,7 @@ public class Patcher {
         hashes.createNewFile();
 
         try (FileWriter writer = new FileWriter(hashes)) {
-            writer.write("serverjar=" + Hash.getHash(JarTool.getJar(), "sha1"));
+            writer.write("serverjar=" + Hash.getHash(JarTool.getJar(), "SHA-512"));
         }
     }
 
@@ -206,7 +206,7 @@ public class Patcher {
     public static boolean updateNeeded() throws NoSuchAlgorithmException, IOException {
         final File hashes = KettingFiles.STORED_HASHES;
         if (hashes.exists()) {
-            final String serverHash = Hash.getHash(JarTool.getJar(), "sha1");
+            final String serverHash = Hash.getHash(JarTool.getJar(), "SHA-512");
 
             try (FileReader reader = new FileReader(hashes)) {
                 final Properties properties = new Properties();

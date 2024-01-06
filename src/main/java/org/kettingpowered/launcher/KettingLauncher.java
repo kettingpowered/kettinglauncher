@@ -7,6 +7,7 @@ import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
 import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.AvailableMavenRepos;
+import org.kettingpowered.launcher.dependency.Dependency;
 import org.kettingpowered.launcher.dependency.Libraries;
 import org.kettingpowered.launcher.dependency.LibraryClassLoader;
 import org.kettingpowered.launcher.dependency.MavenArtifact;
@@ -18,13 +19,12 @@ import org.kettingpowered.launcher.utils.JavaHacks;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +47,7 @@ public class KettingLauncher {
             "com/mojang/brigadier",
     };
 
-    private final Path eula = Paths.get("eula.txt");
+    private final Path eula = new File(KettingFiles.MAIN_FOLDER_FILE, "eula.txt").toPath();
     private final ParsedArgs args;
     private final BetterUI ui;
     private final Libraries libs = new Libraries();
@@ -56,9 +56,21 @@ public class KettingLauncher {
         ui = new BetterUI(KettingConstants.NAME);
         args = new Args(str_args).parse(ui, eula);
     }
-    
+
+    /**
+     * Initialized stuff, so that KettingConstants and KettingFile are usable.
+     * Also takes care of server updates.
+     */
     public void init() throws Exception {
         final String mc_version = MCVersion.getMc(args);
+        //This cannot get moved past the ensureOneServerAndUpdate call. 
+        //It will cause the just downloaded server to be removed, which causes issues. 
+        if (Patcher.updateNeeded()) {
+            //prematurely delete files to prevent errors
+            FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
+            FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
+        }
+
 //        JavaHacks.setStreamFactory();
         ensureOneServerAndUpdate(mc_version);
 //            JavaHacks.removeStreamFactory();
@@ -68,11 +80,6 @@ public class KettingLauncher {
         if(!ui.checkEula(eula)) System.exit(0);
         
         if (args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
-        if (Patcher.updateNeeded()) {
-            //prematurely delete files to prevent errors
-            FileUtils.deleteDir(KettingFileVersioned.NMS_PATCHES_DIR);
-            FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
-        }
     }
     
     private void updateLauncher() throws Exception {
@@ -153,6 +160,7 @@ public class KettingLauncher {
             
             //noinspection ResultOfMethodCallIgnored
             forgeDir.mkdirs();
+            if (Main.DEBUG) System.out.println(forgeDir.getAbsolutePath());
             //noinspection ResultOfMethodCallIgnored
             KettingFiles.SERVER_LZMA.getParentFile().mkdirs();
             Exception exception = new Exception("Failed to download all required files");
@@ -205,13 +213,45 @@ public class KettingLauncher {
         }
     }
 
-    void launch() {
+    void launch() throws NoSuchAlgorithmException, IOException {
+        Libraries libs = new Libraries();
+        {
+            StringBuilder builder = new StringBuilder();
+            try (BufferedReader stream = new BufferedReader(new FileReader(KettingFileVersioned.FORGE_KETTING_LIBS))) {
+                libs.downloadExternal(
+                        stream.lines()
+                                .map(Dependency::parse)
+                                .filter(Optional::isPresent)
+                                .map(Optional::get)
+                                .filter(dep->dep.maven().isPresent())
+                                .filter(dep-> Arrays.stream(MANUALLY_PATCHED_LIBS).noneMatch(path -> dep.maven().get().getPath().startsWith(path)))
+                                .peek(dep-> builder.append(File.pathSeparator).append(new File(KettingFiles.LIBRARIES_DIR, dep.maven().get().getPath()).getAbsolutePath()))
+                                .toList(), 
+                        true,
+                        "SHA-512"
+                );
+            }
+            
+            builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
+            libs.addLoadedLib(KettingFileVersioned.FORGE_UNIVERSAL_JAR.toURI().toURL());
+            
+            System.setProperty("java.class.path", builder.toString());
+            System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
+            addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
+            addToClassPath(KettingFileVersioned.FMLCORE);
+            addToClassPath(KettingFileVersioned.FMLLOADER);
+            addToClassPath(KettingFileVersioned.JAVAFMLLANGUAGE);
+            addToClassPath(KettingFileVersioned.LOWCODELANGUAGE);
+            addToClassPath(KettingFileVersioned.MCLANGUAGE);
+        }
+        
+        if (Patcher.updateNeeded()) new Patcher();
+        
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());
 
-        setProperties();
         ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
         try (URLClassLoader loader = new LibraryClassLoader(libs.getLoadedLibs(), KettingLauncher.class.getClassLoader())) {
             Thread.currentThread().setContextClassLoader(loader);
@@ -228,17 +268,6 @@ public class KettingLauncher {
         }
     }
 
-    private void setProperties() {
-        System.setProperty("java.class.path", getClassPathFromShim());
-        addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
-        addToClassPath(KettingFileVersioned.FMLCORE);
-        addToClassPath(KettingFileVersioned.FMLLOADER);
-        addToClassPath(KettingFileVersioned.JAVAFMLLANGUAGE);
-        addToClassPath(KettingFileVersioned.LOWCODELANGUAGE);
-        addToClassPath(KettingFileVersioned.MCLANGUAGE);
-        System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
-    }
-
     private void addToClassPath(File file) {
         try {
             libs.addLoadedLib(file.toURI().toURL());//Yes, this is important, and fixes an issue with forge not finding language jars
@@ -246,42 +275,5 @@ public class KettingLauncher {
             throw new RuntimeException(e);
         }
         System.setProperty("java.class.path", System.getProperty("java.class.path") + File.pathSeparator + file.getAbsolutePath());
-    }
-
-    /**
-     * @author JustRed23
-     */
-    private String getClassPathFromShim() {
-        InputStream stream = KettingLauncher.class.getClassLoader().getResourceAsStream("data/bootstrap-shim.list");
-        if (stream == null) throw new RuntimeException("Could not find bootstrap-shim.list");
-
-        StringBuilder builder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            String line;
-            for(line = reader.readLine(); line != null; line = reader.readLine()) {
-                String shim = line.split("\t")[2];
-                for (String lib : MANUALLY_PATCHED_LIBS) {
-                    if (shim.startsWith(lib)) {
-                        shim = null;
-                        break;
-                    }
-                }
-
-                if (shim == null) continue;
-
-                File target = new File(KettingFiles.LIBRARIES_PATH, shim);
-                if (!target.exists()) {
-                    System.err.println("Could not find " + shim + " in " + KettingConstants.INSTALLER_LIBRARIES_FOLDER);
-                    continue;
-                }
-
-                builder.append(File.pathSeparator).append(target.getAbsolutePath());
-                libs.addLoadedLib(target.toURI().toURL()); //Yes, this is important, and fixes an issue with forge not finding forge-universal jar
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read bootstrap-shim.list", e);
-        }
-
-        return builder.toString();
     }
 }

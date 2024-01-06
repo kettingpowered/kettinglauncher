@@ -37,11 +37,11 @@ public class Args {
         if (containsArg("-accepteula"))
             BetterUI.forceAcceptEULA(eula);
 
-        boolean enableUpdate = !(containsArg("-dau") || containsArg("-daus"));
-        boolean enableServerUpdate = !containsArg("-daul");
+        boolean enableServerUpdate = !(containsArg("-dau") || containsArg("-daus"));
+        boolean enableLauncherUpdate = !"dev-env".equals(KettingLauncher.Version) && !containsArg("-daul");
         @NotNull String target = Objects.requireNonNullElse(getArg("--launchTarget"), "forge_server");
         @Nullable String minecraftVersion = getArg("--minecraftVersion");
-        return new ParsedArgs(Collections.unmodifiableList(args), enableUpdate, enableServerUpdate, target, minecraftVersion);
+        return new ParsedArgs(Collections.unmodifiableList(args), enableServerUpdate, enableLauncherUpdate, target, minecraftVersion);
     }
 
     private @Nullable String getArg(String arg) {
