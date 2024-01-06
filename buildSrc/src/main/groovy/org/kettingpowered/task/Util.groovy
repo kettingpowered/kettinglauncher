@@ -4,14 +4,14 @@ import java.security.MessageDigest
 
 final class Util {
     public static void init() {
-        File.metaClass.sha256 = { ->
-            MessageDigest md = MessageDigest.getInstance('SHA-256')
+        File.metaClass.sha512 = { ->
+            MessageDigest md = MessageDigest.getInstance('SHA-512')
             delegate.eachByte 4096, {bytes, size ->
                 md.update(bytes, 0, size)
             }
             return md.digest().collect {String.format "%02x", it}.join()
         }
-        File.metaClass.getSha256 = { !delegate.exists() ? null : delegate.sha256() }
+        File.metaClass.getSha512 = { !delegate.exists() ? null : delegate.sha512() }
     }
     public static Map getMavenInfoFromDep(dep) {
         return getMavenInfoFromMap([

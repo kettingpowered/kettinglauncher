@@ -73,37 +73,8 @@ public class NetworkUtils {
         if(expectedHash != null && !hash.equals(expectedHash.toLowerCase())) {
             //noinspection ResultOfMethodCallIgnored
             f.delete();
-            throw new Exception(hashFormat+" hash of downloaded file does not match expected value!");
+            throw new Exception(hashFormat+" hash of downloaded file does not match expected value!\n Got: "+hash+"\n But expected: "+expectedHash);
         }
-    }
-    
-    public static String downloadToString(String URL, @Nullable String expectedHash, @Nullable String hashFormat) throws Exception {
-        if (hashFormat == null) hashFormat = "SHA-512";
-        URLConnection conn = getConnection(URL);
-        InputStream stream = conn.getInputStream();
-        StringWriter writer = new StringWriter();
-        MessageDigest digest = MessageDigest.getInstance(hashFormat);
-        int fS = conn.getContentLength();
-        CompletableFuture.supplyAsync(() -> {
-            byte[] buffer = new byte[Math.min(fS, KettingLauncher.BufferSize)];
-            try (BufferedInputStream inputStream = new BufferedInputStream(stream)) {
-                int total;
-                while ((total = inputStream.read(buffer)) != -1) {
-                    writer.append(new String(buffer));
-                    digest.update(buffer, 0, total);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }, downloadSrvc).get(20, TimeUnit.SECONDS);
-        stream.close();
-        
-        String hash = Hash.getHash(digest);
-        if(expectedHash != null && !hash.equals(expectedHash.toLowerCase())) {
-            throw new Exception(hashFormat + " hash of downloaded file does not match expected value!");
-        }
-        return writer.toString();
     }
 
     public static String readFile(String URL) {

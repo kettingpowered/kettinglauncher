@@ -23,7 +23,7 @@ abstract class GenerateLibs extends DefaultTask {
         getProject().configurations.named(getConfiguration().get()).get().getResolvedConfiguration().getResolvedArtifacts().each { dep->
             def art = dep.moduleVersion.id
             def mavenId = "$art.group:$art.name:$art.version" + (dep.classifier != null ? ":$dep.classifier" : "") + (dep.extension != null ? "@$dep.extension" : "")
-            entries.add("$dep.file.sha256\t$mavenId")
+            entries.add("$dep.file.sha512\t$mavenId")
         }
 
         output.get().asFile.text = entries.join('\n')

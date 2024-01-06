@@ -1,11 +1,16 @@
 package org.kettingpowered.launcher.dependency;
 
 import org.jetbrains.annotations.NotNull;
+import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +19,7 @@ import java.util.Optional;
  * Parses a string with the format of 'group:artifact:version(:classifer)?(@extenstion)?'
  * the group should not contain to consecutive '.' or a '.' at the very beginning/end.
  * Breaking that may lead to wrong artifact resolution.
+ * @author C0D3 M4513R
  */
 public record MavenArtifact(String group, String artifactId, String version, Optional<String> classifier, Optional<String> extension) {
     public static @NotNull Optional<MavenArtifact> parse(String parse){
@@ -66,14 +72,20 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
     }
     
     public static List<String> getDepVersions(@NotNull String group, @NotNull String artifactId) throws Exception {
-        String hash = null, content = null;
+        String hash = null;
         boolean downloaded = false;
         Exception exception = new Exception("Failed to get metadata from all repositories");
+        final String path = getPath(group, artifactId) + "/maven-metadata.xml";
+        final File lib = new File(KettingFiles.LIBRARIES_DIR, path);
+        //noinspection ResultOfMethodCallIgnored
+        lib.getParentFile().mkdirs();
+        //noinspection ResultOfMethodCallIgnored
+        lib.createNewFile();
         for(String repo: AvailableMavenRepos.INSTANCE){
             try{
-                final String url = repo + getPath(group, artifactId) + "/maven-metadata.xml";
-                hash = NetworkUtils.downloadToString(url + ".sha512", null, null);
-                content = NetworkUtils.downloadToString(url, hash, "SHA-512");
+                String url = repo + path;
+                hash = NetworkUtils.readFile(url + ".sha512");
+                NetworkUtils.downloadFile(url, lib, hash, "SHA-512");
                 downloaded = true;
                 break;
             }catch (Throwable throwable){
@@ -83,16 +95,18 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
         if (!downloaded){
             throw exception;
         }
-        assert hash != null && content != null;
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(content);
+        assert hash != null;
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new FileInputStream(lib));
         final List<String> list = new ArrayList<>();
 
-        final NodeList nl = doc.getElementsByTagName("versions");
-        if (nl.getLength() > 1) throw new Exception("Maven Metadata contains more than one 'versions' Tag");
-        if (nl.getLength() < 1) throw new Exception("Maven Metadata contains no 'versions' Tag");
-        final NodeList versions = nl.item(1).getChildNodes();
+        final NodeList versions = doc.getElementsByTagName("version");
+        if (versions.getLength() < 1) throw new Exception("Maven Metadata contains no 'versions' Tag");
         int i = 0;
-        while(i < versions.getLength()) list.add(versions.item(i).getNodeValue());
+        while(i < versions.getLength()) {
+            list.add(versions.item(i).getFirstChild().getNodeValue());
+            i++;
+        }
+        if (Main.DEBUG) System.out.println(String.join("\n", list));
         return new ArrayList<>(list);
     }
 }

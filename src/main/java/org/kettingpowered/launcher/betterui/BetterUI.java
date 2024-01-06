@@ -38,17 +38,18 @@ public class BetterUI {
         this.name = name;
     }
     
-    public void printTitle() {
+    public void printTitle(final String mc_version) {
         if (!enabled)
             return;
 
-        String divider = "-".repeat(DIVIDER_LENGTH);
-        String copyright = "Copyright (c) " + new SimpleDateFormat("yyyy").format(new Date()) + " " + KettingConstants.BRAND;
-        String java = "Running on Java " + System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")";
-        String launcher = "Launcher version "+ KettingLauncher.Version;
-        String server = name + " version " + KettingConstants.VERSION;
-        String bukkit = "Bukkit version  " + KettingConstants.BUKKIT_PACKAGE_VERSION;
-        String forge = "Forge version   " + KettingConstants.FORGE_VERSION;
+        final String divider = "-".repeat(DIVIDER_LENGTH);
+        final String copyright = "Copyright (c) " + new SimpleDateFormat("yyyy").format(new Date()) + " " + KettingConstants.BRAND;
+        final String java = "Running on Java " + System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")";
+        final String launcher = "Launcher version "+ KettingLauncher.Version;
+        final String minecraft = "Minecraft version "+ mc_version;
+        final String server = name + " version " + KettingConstants.VERSION;
+        final String bukkit = "Bukkit version  " + KettingConstants.BUKKIT_PACKAGE_VERSION;
+        final String forge = "Forge version   " + KettingConstants.FORGE_VERSION;
         if (enableBigLogo) {
             System.out.println();
             for (int i = 0; i < bigLogo.length; i++) {
@@ -69,6 +70,7 @@ public class BetterUI {
 
         System.out.println(java);
         System.out.println(launcher);
+        System.out.println(minecraft);
         System.out.println(server);
         System.out.println(bukkit);
         System.out.println(forge);

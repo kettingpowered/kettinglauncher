@@ -5,6 +5,8 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.ketting.internal.KettingFileVersioned;
+import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.internal.utils.Hash;
 import org.kettingpowered.launcher.internal.utils.JarTool;
@@ -14,8 +16,6 @@ import org.kettingpowered.launcher.utils.Processors;
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-
-import static org.kettingpowered.launcher.KettingFiles.DATA_DIR;
 
 public class Patcher {
 
@@ -34,7 +34,7 @@ public class Patcher {
     }
 
     private void downloadServer() throws IOException {
-        final File serverJar = KettingFiles.SERVER_JAR;
+        final File serverJar = KettingFileVersioned.SERVER_JAR;
         if (serverJar.exists()) return;
 
         final String manifest = NetworkUtils.readFile("https://launchermeta.mojang.com/mc/game/version_manifest.json");
@@ -80,7 +80,7 @@ public class Patcher {
     }
 
     private void readInstallScript() {
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(DATA_DIR + "installscript.json");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(KettingFiles.DATA_DIR + "installscript.json");
         if (stream == null) {
             System.err.println("Failed to load installscript.json");
             System.exit(1);
@@ -100,21 +100,21 @@ public class Patcher {
 
     private void extractJarContents() throws IOException {
         ForgeServerLibExtractor.extract();
-        JarTool.extractJarContent(DATA_DIR + "server.lzma", KettingFiles.SERVER_LZMA);
+        JarTool.extractJarContent(KettingFiles.DATA_DIR + "server.lzma", KettingFiles.SERVER_LZMA);
     }
 
     private void prepareTokens() {
         tokens.put("{SIDE}", "server");
         tokens.put("{ROOT}/libraries/", KettingFiles.LIBRARIES_PATH); //Change the libraries folder to our custom one
-        tokens.put("{MINECRAFT_JAR}", KettingFiles.SERVER_JAR.getAbsolutePath());
-        tokens.put("{MC_UNPACKED}", KettingFiles.SERVER_UNPACKED.getAbsolutePath());
-        tokens.put("{MAPPINGS}", KettingFiles.MCP_MAPPINGS.getAbsolutePath());
-        tokens.put("{MOJMAPS}", KettingFiles.MOJANG_MAPPINGS.getAbsolutePath());
-        tokens.put("{MERGED_MAPPINGS}", KettingFiles.MERGED_MAPPINGS.getAbsolutePath());
-        tokens.put("{MC_SLIM}", KettingFiles.SERVER_SLIM.getAbsolutePath());
-        tokens.put("{MC_EXTRA}", KettingFiles.SERVER_EXTRA.getAbsolutePath());
-        tokens.put("{MC_SRG}", KettingFiles.SERVER_SRG.getAbsolutePath());
-        tokens.put("{PATCHED}", KettingFiles.FORGE_PATCHED_JAR.getAbsolutePath());
+        tokens.put("{MINECRAFT_JAR}", KettingFileVersioned.SERVER_JAR.getAbsolutePath());
+        tokens.put("{MC_UNPACKED}", KettingFileVersioned.SERVER_UNPACKED.getAbsolutePath());
+        tokens.put("{MAPPINGS}", KettingFileVersioned.MCP_MAPPINGS.getAbsolutePath());
+        tokens.put("{MOJMAPS}", KettingFileVersioned.MOJANG_MAPPINGS.getAbsolutePath());
+        tokens.put("{MERGED_MAPPINGS}", KettingFileVersioned.MERGED_MAPPINGS.getAbsolutePath());
+        tokens.put("{MC_SLIM}", KettingFileVersioned.SERVER_SLIM.getAbsolutePath());
+        tokens.put("{MC_EXTRA}", KettingFileVersioned.SERVER_EXTRA.getAbsolutePath());
+        tokens.put("{MC_SRG}", KettingFileVersioned.SERVER_SRG.getAbsolutePath());
+        tokens.put("{PATCHED}", KettingFileVersioned.FORGE_PATCHED_JAR.getAbsolutePath());
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
 
@@ -157,7 +157,7 @@ public class Patcher {
                 args.forEach(arg -> {
                     String argString = arg.getAsString();
                     if (argString.startsWith("[de.oceanlabs.mcp:mcp_config:")) {
-                        argString = KettingFiles.MCP_ZIP.getAbsolutePath();
+                        argString = KettingFileVersioned.MCP_ZIP.getAbsolutePath();
                         parsedArgs.add(argString);
                         return;
                     }

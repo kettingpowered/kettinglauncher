@@ -3,9 +3,9 @@ package org.kettingpowered.launcher.dependency;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
+import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.launcher.KettingFiles;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class Libraries {
     private final List<URL> loadedLibs = new ArrayList<>();
     
     public Libraries() {}
-    public void downloadExternal(List<Dependency> dependencies, boolean progressBar) {
+    public void downloadExternal(List<Dependency> dependencies, boolean progressBar, String hashAlgoritm) {
         Stream<Dependency> dependencyStream;
         if (progressBar) {
             ProgressBarBuilder builder = new ProgressBarBuilder()
@@ -36,12 +36,12 @@ public class Libraries {
             dependencyStream = ProgressBar.wrap(dependencies.stream(), builder);
         } else dependencyStream = dependencies.stream();
         
-        dependencyStream.forEach(this::loadDep);
+        dependencyStream.forEach(dep ->this.loadDep(dep, hashAlgoritm));
     }
     
-    private void loadDep(Dependency dep){
+    private void loadDep(Dependency dep, String hashAlgoritm){
         try {
-            LibHelper.downloadDependency(dep);
+            LibHelper.downloadDependency(dep, hashAlgoritm);
             addLoadedLib(LibHelper.getDependencyPath(dep).toUri().toURL());
         } catch (Exception e) {
             throw new RuntimeException("Something went wrong while trying to load dependencies", e);
@@ -49,20 +49,20 @@ public class Libraries {
     }
 
     public static void downloadMcp() throws IOException {
-        if (KettingFiles.MCP_ZIP.exists()) return;
+        if (KettingFileVersioned.MCP_ZIP.exists()) return;
 
         String mcMcp = KettingConstants.MINECRAFT_VERSION + "-" + KettingConstants.MCP_VERSION;
 
         try {
             //noinspection ResultOfMethodCallIgnored
-            KettingFiles.MCP_ZIP.getParentFile().mkdirs();
+            KettingFileVersioned.MCP_ZIP.getParentFile().mkdirs();
             String mavenBasePath = "de/oceanlabs/mcp/mcp_config/" + mcMcp + "/mcp_config-" + mcMcp + ".zip";
 
             for (String repo : AvailableMavenRepos.INSTANCE) {
                 try {
                     String fullPath = repo + mavenBasePath;
                     String hash = NetworkUtils.readFile(fullPath + ".sha512");
-                    NetworkUtils.downloadFile(fullPath, KettingFiles.MCP_ZIP, hash, "SHA-512");
+                    NetworkUtils.downloadFile(fullPath, KettingFileVersioned.MCP_ZIP, hash, "SHA-512");
                     break;
                 } catch (Throwable ignored) {
                     if (AvailableMavenRepos.isLast(repo)) {
@@ -75,7 +75,7 @@ public class Libraries {
             }
         } catch (Exception e) {
             //noinspection ResultOfMethodCallIgnored
-            KettingFiles.MCP_ZIP.delete();
+            KettingFileVersioned.MCP_ZIP.delete();
             throw new IOException("Failed to download MCP", e);
         }
     }

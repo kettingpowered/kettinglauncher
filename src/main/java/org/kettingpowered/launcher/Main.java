@@ -1,5 +1,7 @@
 package org.kettingpowered.launcher;
 
+import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.dependency.Dependency;
 import org.kettingpowered.launcher.dependency.Libraries;
 
@@ -15,12 +17,14 @@ import java.util.Optional;
 import java.util.jar.JarFile;
 
 public class Main {
+    public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
+    public static final String FORGE_SERVER_ARTIFACT_ID = "forge";
     public static void agentmain(String agentArgs, Instrumentation inst) throws IOException {
-        System.out.println("[Agent] premain lib load start");
+        if (DEBUG) System.out.println("[Agent] premain lib load start");
         final Libraries libs = new Libraries();
         //Download all needed libs for the Launcher itself
         try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
-            libs.downloadExternal(stream.lines().map(Dependency::parse).filter(Optional::isPresent).map(Optional::get).toList(), false);
+            libs.downloadExternal(stream.lines().map(Dependency::parse).filter(Optional::isPresent).map(Optional::get).toList(), false, "SHA-512");
         }
 
         Arrays.stream(libs.getLoadedLibs()).forEach(url -> {
@@ -30,9 +34,11 @@ public class Main {
                 throw new RuntimeException(e);
             }
         });
-        System.out.println("[Agent] premain lib load end");
+        if (DEBUG) System.out.println("[Agent] premain lib load end");
     }
     public static void main(String[] args) throws Exception {
-        new KettingLauncher(args).launch();
+        final KettingLauncher launcher = new KettingLauncher(args);
+        launcher.init();
+        launcher.launch();
     }
 }

@@ -11,6 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author C0D3 M4513R
+ */
 public class Args {
     
     private final @NotNull List<String> args;
@@ -42,20 +45,23 @@ public class Args {
     }
 
     private @Nullable String getArg(String arg) {
-        if (args.isEmpty()) return null ;
-
         int index = args.indexOf(arg);
-        if (index < 0) return null;
-        args.remove(index); //remove arg
-        return args.remove(index); //this should be the value to that arg
+        if (index > 0) {
+            args.remove(index); //remove arg
+            return args.remove(index); //this should be the value to that arg
+        }
+        arg = arg.replace("-","");
+        String out = System.getenv("kettinglauncher_" + arg);
+        if (out != null) return out;
+        return System.getProperty("kettinglauncher."+arg);
     }
 
     private boolean containsArg(String arg) {
-        if (args.isEmpty()) return false;
-
         int index = args.indexOf(arg);
-        if (index < 0) return false;
-        args.remove(index);
-        return true;
+        if (index >= 0) return true;
+        arg = arg.replace("-","");
+        if (System.getenv("kettinglauncher_" + arg) != null) return true;
+        if (System.getProperty("kettinglauncher."  + arg) != null) return true;
+        return false;
     }
 }
