@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: jar
-          path: build/libs/terminal-colors-*.jar
+          path: build/libs/kettinglauncher-*.jar
 
       - name: Upload Hash
         uses: actions/upload-artifact@v3
@@ -96,7 +96,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         run: |
-          gh release create "v$VERSION" tmp/terminal-colors-*.jar \
+          gh release create "v$VERSION" tmp/kettinglauncher-*.jar \
               --repo="$GITHUB_REPOSITORY" \
               --title="${GITHUB_REPOSITORY#*/} v$VERSION" \
               --generate-notes

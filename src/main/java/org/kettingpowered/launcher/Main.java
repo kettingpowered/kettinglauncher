@@ -24,7 +24,7 @@ public class Main {
         final Libraries libs = new Libraries();
         //Download all needed libs for the Launcher itself
         try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
-            libs.downloadExternal(stream.lines().map(Dependency::parse).filter(Optional::isPresent).map(Optional::get).toList(), false, "SHA-512");
+            libs.downloadExternal(stream.lines().map(Dependency::parse).filter(Optional::isPresent).map(Optional::get).toList(), false);
         }
 
         Arrays.stream(libs.getLoadedLibs()).forEach(url -> {

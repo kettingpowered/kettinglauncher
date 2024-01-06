@@ -8,6 +8,7 @@ import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.AvailableMavenRepos;
 import org.kettingpowered.launcher.dependency.Dependency;
+import org.kettingpowered.launcher.dependency.LibHelper;
 import org.kettingpowered.launcher.dependency.Libraries;
 import org.kettingpowered.launcher.dependency.LibraryClassLoader;
 import org.kettingpowered.launcher.dependency.MavenArtifact;
@@ -65,7 +66,8 @@ public class KettingLauncher {
         final String mc_version = MCVersion.getMc(args);
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues. 
-        if (Patcher.updateNeeded()) {
+        if (false) { //todo: patcher update checking
+            if (Main.DEBUG) System.out.println("Patcher needs updating.");
             //prematurely delete files to prevent errors
             FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
             FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
@@ -123,16 +125,20 @@ public class KettingLauncher {
             System.out.println(Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
         }
         final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
+        Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> serverVersion = null;
         
         if(versions.isEmpty()) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
         else if(versions.size() > 1) {
-            Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = versions.get(0);
+            serverVersion = versions.get(0);
+            Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = serverVersion;
             Arrays.stream(Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]))
                     .filter(file -> !Objects.equals(file.getName(),String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2())))
                     .forEach(FileUtils::deleteDir);
+        }else{
+            serverVersion = versions.get(0);
         }
         final boolean needsDownload = versions.isEmpty();
-
+        
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
         if (args.enableServerUpdator() || needsDownload) {
             final List<String> serverVersions = MavenArtifact.getDepVersions(KettingConstants.KETTINGSERVER_GROUP, "forge");
@@ -142,78 +148,39 @@ public class KettingLauncher {
                 System.out.println(String.join("\n", serverVersions));
             }
             if (parsedServerVersions.isEmpty()) {
-                System.err.println("Found no Ketting version for the requested Minecraft Version: "+mc_version);
+                System.err.println("Found no Ketting version for the requested Minecraft Version: " + mc_version);
                 System.exit(1);
             }
-            Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = parsedServerVersions.get(0);
-            final String mc_minecraft_forge = String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2());
-            final String path = MavenArtifact.getPath(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID)+"/" + mc_minecraft_forge + "/";
+            serverVersion = parsedServerVersions.get(0);
+        }
+        //todo: Server version is populated here. We could theoretically do what used to be the patched invalidation check here. 
+        if (args.enableServerUpdator() || needsDownload) {
+            final String mc_minecraft_forge = String.format("%s-%s-%s", mc_mmp, serverVersion.t1(), serverVersion.t2());
             final File forgeDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR,mc_minecraft_forge);
-            final String forgeFilePrefix = Main.FORGE_SERVER_ARTIFACT_ID+"-"+mc_minecraft_forge+"-";
-            final String serverBinPatchesEnding = "server-bin-patches.lzma";
-            final String installerJsonEnding = "installscript.json";
-            final String kettingLibsEnding = "ketting-libraries.txt";
-            final String universalJarEnding = "universal.jar";
-            final File installerJson = new File(forgeDir, forgeFilePrefix+installerJsonEnding);
-            final File kettingLibs = new File(forgeDir, forgeFilePrefix+kettingLibsEnding);
-            final File universalJar = new File(forgeDir, forgeFilePrefix+universalJarEnding);
             
             //noinspection ResultOfMethodCallIgnored
             forgeDir.mkdirs();
-            if (Main.DEBUG) System.out.println(forgeDir.getAbsolutePath());
             //noinspection ResultOfMethodCallIgnored
             KettingFiles.SERVER_LZMA.getParentFile().mkdirs();
-            Exception exception = new Exception("Failed to download all required files");
-            boolean downloaded = false;
-            for (final String repo:AvailableMavenRepos.INSTANCE) {
-                Exception exception1 = new Exception("the repo only provided some files");
-                boolean allFine = true;
-                try{
-                    final String serverBinPatches = repo+path+forgeFilePrefix+serverBinPatchesEnding;
-                    NetworkUtils.downloadFile(serverBinPatches, KettingFiles.SERVER_LZMA, NetworkUtils.readFile(serverBinPatches+".sha512"),"SHA-512");
-                }catch (Throwable throwable) {
-                    exception1.addSuppressed(throwable);
-                    allFine = false;
-                }
-                
-                try {
-                    final String installerJsonURL = repo+path+forgeFilePrefix+installerJsonEnding;
-                    NetworkUtils.downloadFile(installerJsonURL, installerJson, NetworkUtils.readFile(installerJsonURL+".sha512"), "SHA-512");
-                }catch (Throwable throwable){
-                    exception1.addSuppressed(throwable);
-                    allFine = false;
-                }
-                
-                try {
-                    final String kettingLibsURL = repo+path+forgeFilePrefix+kettingLibsEnding;
-                    NetworkUtils.downloadFile(kettingLibsURL, kettingLibs, NetworkUtils.readFile(kettingLibsURL+".sha512"), "SHA-512");
-                } catch (Throwable throwable){
-                    exception1.addSuppressed(throwable);
-                    allFine = false;
-                }
 
-                try {
-                    final String universalJarURL = repo+path+forgeFilePrefix+universalJarEnding;
-                    NetworkUtils.downloadFile(universalJarURL, universalJar, NetworkUtils.readFile(universalJarURL+".sha512"), "SHA-512");
-                } catch (Throwable throwable){
-                    exception1.addSuppressed(throwable);
-                    allFine = false;
-                }
+            try{
+                final MavenArtifact serverBinPatchesArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("server-bin-patches"), Optional.of("lzma"));
+                final MavenArtifact installerJsonArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("installscript"), Optional.of("json"));
+                final MavenArtifact kettingLibsArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("ketting-libraries"), Optional.of("txt"));
+                final MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("universal"), Optional.of("jar"));
                 
-                if (allFine) {
-                    downloaded = true;
-                    break;
-                }
-                exception.addSuppressed(exception1);
-            }
-            if (!downloaded) {
+                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(serverBinPatchesArtifact));
+                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(installerJsonArtifact));
+                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(kettingLibsArtifact));
+                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(universalJarArtifact));
+            }catch (IOException|NoSuchAlgorithmException ignored){
                 FileUtils.deleteDir(forgeDir);
-                throw exception;
+                throw ignored;
             }
         }
     }
 
-    void launch() throws NoSuchAlgorithmException, IOException {
+    void launch() throws Exception {
         Libraries libs = new Libraries();
         {
             StringBuilder builder = new StringBuilder();
@@ -227,25 +194,30 @@ public class KettingLauncher {
                                 .filter(dep-> Arrays.stream(MANUALLY_PATCHED_LIBS).noneMatch(path -> dep.maven().get().getPath().startsWith(path)))
                                 .peek(dep-> builder.append(File.pathSeparator).append(new File(KettingFiles.LIBRARIES_DIR, dep.maven().get().getPath()).getAbsolutePath()))
                                 .toList(), 
-                        true,
-                        "SHA-512"
+                        true
                 );
             }
             
             builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
-            libs.addLoadedLib(KettingFileVersioned.FORGE_UNIVERSAL_JAR.toURI().toURL());
+            MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
+
+            libs.loadDep(LibHelper.downloadDependencyHash(universalJarArtifact));
             
             System.setProperty("java.class.path", builder.toString());
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
             addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
-            addToClassPath(KettingFileVersioned.FMLCORE);
-            addToClassPath(KettingFileVersioned.FMLLOADER);
-            addToClassPath(KettingFileVersioned.JAVAFMLLANGUAGE);
-            addToClassPath(KettingFileVersioned.LOWCODELANGUAGE);
-            addToClassPath(KettingFileVersioned.MCLANGUAGE);
+            addToClassPath(KettingFileVersioned.SERVER_JAR);
+//            addToClassPath(KettingFileVersioned.FORGE_UNIVERSAL_JAR);
+//            addToClassPath(KettingFileVersioned.FMLCORE);
+//            addToClassPath(KettingFileVersioned.FMLLOADER);
+//            addToClassPath(KettingFileVersioned.JAVAFMLLANGUAGE);
+//            addToClassPath(KettingFileVersioned.LOWCODELANGUAGE);
+//            addToClassPath(KettingFileVersioned.MCLANGUAGE);
         }
+        Libraries.downloadMcp();
         
-        if (Patcher.updateNeeded()) new Patcher();
+        
+        new Patcher(); //todo: patcher update checking 
         
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
@@ -261,9 +233,11 @@ public class KettingLauncher {
             Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, loader)
                     .getMethod("main", String[].class)
                     .invoke(null, (Object) arg_list.toArray(String[]::new));
-        } catch (Throwable t) {
-            throw new RuntimeException("Could not launch server", t);
-        } finally{
+        }
+//        catch (Throwable t) {
+//            throw new RuntimeException("Could not launch server", t);
+//        }
+        finally{
             Thread.currentThread().setContextClassLoader(oldCL);
         }
     }

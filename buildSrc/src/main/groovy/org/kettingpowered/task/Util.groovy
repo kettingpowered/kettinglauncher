@@ -5,7 +5,7 @@ import java.security.MessageDigest
 final class Util {
     public static void init() {
         File.metaClass.sha512 = { ->
-            MessageDigest md = MessageDigest.getInstance('SHA-512')
+            MessageDigest md = MessageDigest.getInstance('SHA3-512')
             delegate.eachByte 4096, {bytes, size ->
                 md.update(bytes, 0, size)
             }

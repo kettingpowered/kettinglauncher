@@ -14,14 +14,63 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 
 // Code inspired from package dev.vankka.dependencydownload, but changed over time.
 // Check them out: https://github.com/Vankka/DependencyDownload
 public final class LibHelper {
     public static final Path baseDirPath = JarTool.getJarDir().toPath();
+    
+    public static final List<String> hashAlgorithms = List.of(
+            "SHA-512",
+            "SHA-384",
+            "SHA-256",
+            "SHA-224",
+            "SHA-1",
+            "MD5",
+            "MD2"
+    );
 
-    public static void downloadDependency(Dependency dependency, String hashAlgorithm) throws IOException, NoSuchAlgorithmException {
+    public static String hashAlgoToExt(String hashAlgorithm) {
+        return switch (hashAlgorithm) {
+            case "MD2" -> ".md2";
+            case "MD5" -> ".md5";
+            case "SHA-1" -> ".sha1";
+            case "SHA-224" -> ".sha224";
+            case "SHA-256" -> ".sha256";
+            case "SHA-384" -> ".sha384";
+            case "SHA-512", "SHA-512/224", "SHA-512/256" -> ".sha512";
+            default -> hashAlgorithm;
+        };
+    }
+    
+    public static Dependency downloadDependencyHash(final MavenArtifact artifact) throws Exception{
+        String hash = null;
+        String hashAlgorithmOut = null;
+        Exception exception = new Exception("Failed to get hash for "+artifact+" from all repos");
+        boolean downloaded = false;
+        for(final String repo:AvailableMavenRepos.INSTANCE){
+            Exception exception1 = new Exception("Failed to any hash for "+artifact+" from repo: "+ repo);
+            for(final String hashAlgorithm:hashAlgorithms){
+                try{
+                    hash = NetworkUtils.readFileThrow(repo+artifact.getPath()+hashAlgoToExt(hashAlgorithm));
+                    hashAlgorithmOut = hashAlgorithm;
+                    downloaded = true;
+                }catch (Throwable throwable){
+                    exception1.addSuppressed(throwable);
+                }
+            }
+            if (!downloaded) exception.addSuppressed(exception1);
+        }
+        if (!downloaded) throw exception;
+        return new Dependency(hash, hashAlgorithmOut, Optional.of(artifact));
+    }
+
+    public static void downloadDependency(Dependency dependency) throws IOException, NoSuchAlgorithmException {
         if (dependency.maven().isEmpty()) throw new IllegalArgumentException("Passed dependency has no maven information");
         Path dependencyPath = getDependencyPath(dependency);
 
@@ -30,7 +79,7 @@ public final class LibHelper {
         }
 
         if (Files.exists(dependencyPath)) {
-            String fileHash = Hash.getHash(dependencyPath.toFile(), hashAlgorithm);
+            String fileHash = Hash.getHash(dependencyPath.toFile(), dependency.hashType());
             if (fileHash.equals(dependency.hash())) {
                 if (Main.DEBUG) System.out.println("Dep Cached: "+dependency.maven().get());
                 // This dependency is already downloaded & the hash matches
@@ -47,7 +96,7 @@ public final class LibHelper {
         boolean anyFailures = false;
         for (String repository : AvailableMavenRepos.INSTANCE) {
             try {
-                MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
+                MessageDigest digest = MessageDigest.getInstance(dependency.hashType());
                 downloadFromRepository(dependency, repository, dependencyPath, digest);
 
                 String hash = Hash.getHash(digest);

@@ -77,11 +77,14 @@ public class NetworkUtils {
         }
     }
 
+    public static String readFileThrow(String URL) throws Exception {
+        File f = File.createTempFile(KettingConstants.NAME, ".tmp");
+        downloadFile(URL, f);
+        return new String(Files.readAllBytes(f.toPath()));
+    }
     public static String readFile(String URL) {
         try {
-            File f = File.createTempFile(KettingConstants.NAME, ".tmp");
-            downloadFile(URL, f);
-            return new String(Files.readAllBytes(f.toPath()));
+            return readFileThrow(URL);
         } catch (FileNotFoundException fnf) {
             return null;
         } catch (Exception e) {

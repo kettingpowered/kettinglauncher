@@ -28,7 +28,6 @@ public class Patcher {
     public Patcher() throws IOException, NoSuchAlgorithmException {
         downloadServer();
         readInstallScript();
-        extractJarContents();
         prepareTokens();
         readAndExecuteProcessors();
     }
@@ -80,28 +79,23 @@ public class Patcher {
     }
 
     private void readInstallScript() {
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(KettingFiles.DATA_DIR + "installscript.json");
-        if (stream == null) {
-            System.err.println("Failed to load installscript.json");
+        try(FileReader reader = new FileReader(KettingFileVersioned.FORGE_INSTALL_JSON)){
+            final JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonArray rawProcessors = object.getAsJsonArray("processors");
+    
+            rawProcessors.forEach(p -> {
+                JsonObject processor = p.getAsJsonObject();
+                if (!processor.has("sides") || processor.get("sides").getAsString().contains("server"))
+                    processors.add(processor);
+            });
+    
+            processors.remove(0); //Remove the extracting processor, we'll handle that ourselves
+        }catch (IOException exception){
+            System.err.println("Failed to load/read installscript.json");
             System.exit(1);
         }
-
-        final JsonObject object = JsonParser.parseReader(new InputStreamReader(stream)).getAsJsonObject();
-        JsonArray rawProcessors = object.getAsJsonArray("processors");
-
-        rawProcessors.forEach(p -> {
-            JsonObject processor = p.getAsJsonObject();
-            if (!processor.has("sides") || processor.get("sides").getAsString().contains("server"))
-                processors.add(processor);
-        });
-
-        processors.remove(0); //Remove the extracting processor, we'll handle that ourselves
     }
-
-    private void extractJarContents() throws IOException {
-        ForgeServerLibExtractor.extract();
-        JarTool.extractJarContent(KettingFiles.DATA_DIR + "server.lzma", KettingFiles.SERVER_LZMA);
-    }
+    
 
     private void prepareTokens() {
         tokens.put("{SIDE}", "server");
@@ -119,8 +113,6 @@ public class Patcher {
     }
 
     private void readAndExecuteProcessors() throws NoSuchAlgorithmException, IOException {
-        if (!updateNeeded()) return;
-
         final File logFile = KettingFiles.PATCHER_LOGS;
         if (!logFile.exists()) {
             try {
@@ -183,16 +175,6 @@ public class Patcher {
                 }
             });
         }
-
-        final File hashes = KettingFiles.STORED_HASHES;
-        //noinspection ResultOfMethodCallIgnored
-        hashes.getParentFile().mkdirs();
-        //noinspection ResultOfMethodCallIgnored
-        hashes.createNewFile();
-
-        try (FileWriter writer = new FileWriter(hashes)) {
-            writer.write("serverjar=" + Hash.getHash(JarTool.getJar(), "SHA-512"));
-        }
     }
 
     private void mute() {
@@ -202,21 +184,5 @@ public class Patcher {
     private void unmute() {
         System.setOut(out);
     }
-
-    public static boolean updateNeeded() throws NoSuchAlgorithmException, IOException {
-        final File hashes = KettingFiles.STORED_HASHES;
-        if (hashes.exists()) {
-            final String serverHash = Hash.getHash(JarTool.getJar(), "SHA-512");
-
-            try (FileReader reader = new FileReader(hashes)) {
-                final Properties properties = new Properties();
-                properties.load(reader);
-
-                final String storedServerHash = properties.getProperty("serverjar");
-                if (storedServerHash != null && storedServerHash.equals(serverHash))
-                    return false;
-            }
-        }
-        return true;
-    }
+    
 }
