@@ -72,30 +72,8 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
     }
     
     public static List<String> getDepVersions(@NotNull String group, @NotNull String artifactId) throws Exception {
-        String hash = null;
-        boolean downloaded = false;
-        Exception exception = new Exception("Failed to get metadata from all repositories");
         final String path = getPath(group, artifactId) + "/maven-metadata.xml";
-        final File lib = new File(KettingFiles.LIBRARIES_DIR, path);
-        //noinspection ResultOfMethodCallIgnored
-        lib.getParentFile().mkdirs();
-        //noinspection ResultOfMethodCallIgnored
-        lib.createNewFile();
-        for(String repo: AvailableMavenRepos.INSTANCE){
-            try{
-                String url = repo + path;
-                hash = NetworkUtils.readFile(url + ".sha512");
-                NetworkUtils.downloadFile(url, lib, hash, "SHA-512");
-                downloaded = true;
-                break;
-            }catch (Throwable throwable){
-                exception.addSuppressed(throwable);
-            }
-        }
-        if (!downloaded){
-            throw exception;
-        }
-        assert hash != null;
+        final File lib = LibHelper.downloadDependencyAndHash(path);
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new FileInputStream(lib));
         final List<String> list = new ArrayList<>();
 

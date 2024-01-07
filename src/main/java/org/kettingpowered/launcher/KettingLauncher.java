@@ -88,15 +88,19 @@ public class KettingLauncher {
         final int index = launcherVersions.indexOf(Version);
         if (index<0) {
             System.err.println("Using unrecognised Launcher version.");
-            return;
         }
         else if (index==0) {
             System.out.println("Already on newest Launcher version. Nothing to do.");
             return;
         }
 
-        LibHelper.downloadDependency(LibHelper.downloadDependencyHash(new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar"))));
-        System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
+        Dependency dep = LibHelper.downloadDependencyHash(new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar")));
+        LibHelper.downloadDependency(dep);
+        if (!LibHelper.getDependencyPath(dep).toFile().renameTo(KettingLauncher.LauncherJar)) {
+            System.err.println("Something went wrong whilst replacing the Launcher Jar.");
+        }else{
+            System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
+        }
     }
     
     private void ensureOneServerAndUpdate(final String mc_version) throws Exception {

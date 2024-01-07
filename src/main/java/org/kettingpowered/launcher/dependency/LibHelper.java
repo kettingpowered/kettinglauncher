@@ -1,5 +1,7 @@
 package org.kettingpowered.launcher.dependency;
 
+import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.Hash;
@@ -49,15 +51,26 @@ public final class LibHelper {
     }
     
     public static Dependency downloadDependencyHash(final MavenArtifact artifact) throws Exception{
+        Tuple<String, String> deps = downloadDependencyHash(artifact.getPath());
+        return new Dependency(deps.t1(), deps.t2(), Optional.of(artifact));
+    }
+
+    /**
+     * Gets a hash of a path
+     * @param path path 
+     * @return tuple containing the hash, and the MessageDigest Name of the Hashing-Function
+     * @throws Exception if no hash could be found
+     */
+    public static Tuple<String, String> downloadDependencyHash(final String path) throws Exception{
         String hash = null;
         String hashAlgorithmOut = null;
-        Exception exception = new Exception("Failed to get hash for "+artifact+" from all repos");
+        Exception exception = new Exception("Failed to get hash for "+path+" from all repos");
         boolean downloaded = false;
         for(final String repo:AvailableMavenRepos.INSTANCE){
-            Exception exception1 = new Exception("Failed to any hash for "+artifact+" from repo: "+ repo);
+            Exception exception1 = new Exception("Failed to any hash for "+path+" from repo: "+ repo);
             for(final String hashAlgorithm:hashAlgorithms){
                 try{
-                    hash = NetworkUtils.readFileThrow(repo+artifact.getPath()+hashAlgoToExt(hashAlgorithm));
+                    hash = NetworkUtils.readFileThrow(repo+path+hashAlgoToExt(hashAlgorithm));
                     hashAlgorithmOut = hashAlgorithm;
                     downloaded = true;
                 }catch (Throwable throwable){
@@ -67,7 +80,31 @@ public final class LibHelper {
             if (!downloaded) exception.addSuppressed(exception1);
         }
         if (!downloaded) throw exception;
-        return new Dependency(hash, hashAlgorithmOut, Optional.of(artifact));
+        return new Tuple<>(hash, hashAlgorithmOut);
+    }
+    
+    
+    public static File downloadDependencyAndHash(String path) throws Exception {
+        File file = new File(KettingFiles.LIBRARIES_DIR, path);
+        //noinspection ResultOfMethodCallIgnored
+        file.getParentFile().mkdirs();
+        Exception exception = new Exception("Failed to get hash for "+path+" from all repos");
+        boolean downloaded = false;
+        for(final String repo:AvailableMavenRepos.INSTANCE){
+            Exception exception1 = new Exception("Failed to any hash for "+path+" from repo: "+ repo);
+            for(final String hashAlgorithm:hashAlgorithms){
+                try{
+                    String hash = NetworkUtils.readFileThrow(repo+path+hashAlgoToExt(hashAlgorithm));
+                    NetworkUtils.downloadFile(repo+path, file, hash, hashAlgorithm);
+                    downloaded = true;
+                }catch (Throwable throwable){
+                    exception1.addSuppressed(throwable);
+                }
+            }
+            if (!downloaded) exception.addSuppressed(exception1);
+        }
+        if (!downloaded) throw exception;
+        return file;
     }
 
     public static void downloadDependency(Dependency dependency) throws IOException, NoSuchAlgorithmException {
