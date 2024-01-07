@@ -5,6 +5,7 @@ import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.KettingLauncher;
+import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.betterui.BetterUI;
 
 import java.io.File;
@@ -43,20 +44,23 @@ public class Libraries {
     }
     
     public void loadDep(Dependency dep) {
+        if (dep.maven().isEmpty()) throw new IllegalStateException("Loading a Dependency with no maven coordinates is unsupported.");
+        File depFile;
         try{
-            if (dep.maven().isPresent() && KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().get().equalsIgnoringVersion(artifact))) {
+            if (KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().get().equalsIgnoringVersion(artifact))) {
                 MavenArtifact artifact = dep.maven().get().getLatestMinorPatch();
-                if (artifact!=dep.maven().get()) artifact.downloadDependencyAndHash();
-                else dep.downloadDependency();
+                if (Main.DEBUG) System.out.println("Using "+artifact+" instead of "+dep.maven().get());
+                if (!artifact.equals(dep.maven().get())) depFile = artifact.downloadDependencyAndHash();
+                else depFile = dep.downloadDependency();
+            }else {
+                depFile = dep.downloadDependency();
             }
         }catch (Exception e){
             throw new RuntimeException(e);
         }
         //AUTO_UPDATE_LIBS end
-        if (dep.maven().isEmpty()) throw new IllegalStateException("Loading a Dependency with no maven coordinates is unsupported.");
         try {
-            dep.downloadDependency();
-            addLoadedLib(dep.maven().get().getDependencyPath().toUri().toURL());
+            addLoadedLib(depFile);
         } catch (Exception e) {
             throw new RuntimeException("Something went wrong while trying to load dependencies", e);
         }

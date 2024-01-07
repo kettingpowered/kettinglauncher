@@ -10,10 +10,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,8 +123,9 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
                 //restrict versions to only update to latest minor change.
                 //Major changes indicate a BREAKING change.
                 .filter(mmp -> mmp.major().equals(version.major()))
+                .sorted()
                 .map(MajorMinorPatchVersion::toString).toList();
-        if (!versions.isEmpty()) return withVersion(versions.get(0));
+        if (!versions.isEmpty()) return withVersion(versions.get(versions.size()-1));
         return this;
     }
 
@@ -221,7 +219,7 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
         return file;
     }
 
-    void downloadFromRepository(String repository, Path dependencyPath, MessageDigest digest) throws Throwable {
+    void downloadFromRepository(String repository, File dependencyFile, MessageDigest digest) throws Throwable {
         if (!repository.endsWith("/")) repository = repository + "/";
         String path = getPath();
         if (path.startsWith("/")) path = path.substring(1);
@@ -229,7 +227,7 @@ public record MavenArtifact(String group, String artifactId, String version, Opt
 
         byte[] buffer = new byte[KettingLauncher.BufferSize];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {
-            try (BufferedOutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(dependencyPath))) {
+            try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(dependencyFile))) {
                 int total;
                 while ((total = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, total);

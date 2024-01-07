@@ -4,9 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.Hash;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
@@ -32,27 +31,27 @@ public record Dependency(String hash, String hashType, Optional<MavenArtifact> m
 
     // Code below inspired from package dev.vankka.dependencydownload, but changed over time.
     // Check them out: https://github.com/Vankka/DependencyDownload
-    public void downloadDependency() throws IOException, NoSuchAlgorithmException {
+    public File downloadDependency() throws IOException, NoSuchAlgorithmException {
         if (maven.isEmpty()) throw new IllegalArgumentException("Passed dependency has no maven information");
         MavenArtifact maven = this.maven.get();
-        Path dependencyPath = maven.getDependencyPath();
+        File dependencyFile = maven.getDependencyPath().toFile();
 
-        if (!Files.exists(dependencyPath.getParent())) {
-            Files.createDirectories(dependencyPath.getParent());
-        }
+        //noinspection ResultOfMethodCallIgnored
+        dependencyFile.getParentFile().mkdirs();
 
-        if (Files.exists(dependencyPath)) {
-            String fileHash = Hash.getHash(dependencyPath.toFile(), hashType);
+        if (dependencyFile.exists()) {
+            String fileHash = Hash.getHash(dependencyFile, hashType);
             if (fileHash.equals(hash)) {
                 if (Main.DEBUG) System.out.println("Dep Cached: "+maven);
                 // This dependency is already downloaded & the hash matches
-                return;
+                return dependencyFile;
             } else {
                 if (Main.DEBUG) System.out.println("Dep Hash-Mismatch. expected:" + hash + ", but got: " + fileHash + " redownloading: "+maven);
-                Files.delete(dependencyPath);
+                if (!dependencyFile.delete()) System.err.println("Something went wrong whilst deleting Dependency "+ this);
             }
         }
-        Files.createFile(dependencyPath);
+        //noinspection ResultOfMethodCallIgnored
+        dependencyFile.createNewFile();
 
         RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
         if (Main.DEBUG) System.out.println("Downloading: "+maven);
@@ -60,7 +59,7 @@ public record Dependency(String hash, String hashType, Optional<MavenArtifact> m
         for (String repository : AvailableMavenRepos.INSTANCE) {
             try {
                 MessageDigest digest = MessageDigest.getInstance(hashType);
-                maven.downloadFromRepository(repository, dependencyPath, digest);
+                maven.downloadFromRepository(repository, dependencyFile, digest);
 
                 String hash = Hash.getHash(digest);
                 if (!this.hash.equals(hash)) {
@@ -69,9 +68,10 @@ public record Dependency(String hash, String hashType, Optional<MavenArtifact> m
 
                 // Success
                 if (Main.DEBUG) System.out.println("Downloaded '" + maven + "' from "+repository);
-                return;
+                return dependencyFile;
             } catch (Throwable e) {
-                Files.deleteIfExists(dependencyPath);
+                //noinspection ResultOfMethodCallIgnored
+                dependencyFile.delete();
                 failure.addSuppressed(e);
                 anyFailures = true;
             }

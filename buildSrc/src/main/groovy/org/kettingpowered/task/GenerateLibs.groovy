@@ -20,10 +20,10 @@ abstract class GenerateLibs extends DefaultTask {
     @TaskAction
     void genActions() {
         def entries = new ArrayList<GString> ()
-        getProject().configurations.named(getConfiguration().get()).get().getResolvedConfiguration().getResolvedArtifacts().each { dep->
+        getProject().configurations.transitive.resolvedConfiguration.resolvedArtifacts.each { dep->
             def art = dep.moduleVersion.id
             def mavenId = "$art.group:$art.name:$art.version" + (dep.classifier != null ? ":$dep.classifier" : "") + (dep.extension != null ? "@$dep.extension" : "")
-            entries.add("$dep.file.sha512\tSHA3-512\t$mavenId")
+            entries.push("$dep.file.sha512\tSHA3-512\t$mavenId")
         }
 
         output.get().asFile.text = entries.join('\n')
