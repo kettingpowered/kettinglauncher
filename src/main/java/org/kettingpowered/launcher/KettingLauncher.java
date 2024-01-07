@@ -1,10 +1,6 @@
 package org.kettingpowered.launcher;
 
-import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.ketting.internal.KettingFileVersioned;
-import org.kettingpowered.ketting.internal.KettingFiles;
-import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
-import org.kettingpowered.ketting.internal.Tuple;
+import org.kettingpowered.ketting.internal.*;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.Dependency;
 import org.kettingpowered.launcher.dependency.Libraries;
@@ -22,11 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKettingServerVersionList;
@@ -80,23 +72,31 @@ public class KettingLauncher {
         
         ui.printTitle(mc_version);
 
+        if (args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
+
         if(!ui.checkEula(eula)) System.exit(0);
         
-        if (args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
     }
     
     private void updateLauncher() throws Exception {
-        final List<String> launcherVersions = MavenArtifact.getDepVersions(KettingConstants.KETTING_GROUP, ArtifactID);
-        final int index = launcherVersions.indexOf(Version);
+        if ("dep-env".equals(Version)) return;
+        final List<MajorMinorPatchVersion<String>> launcherVersions = MavenArtifact.getDepVersions(KettingConstants.KETTING_GROUP, ArtifactID)
+                .stream()
+                .map(MajorMinorPatchVersion::parse)
+                .sorted()
+                .toList();
+        if(Main.DEBUG) System.out.println(launcherVersions.stream().map(MajorMinorPatchVersion::toString).collect(Collectors.joining("\n")));
+        MajorMinorPatchVersion<String> version = MajorMinorPatchVersion.parse(Version);
+        final int index = launcherVersions.indexOf(version);
         if (index<0) {
             System.err.println("Using unrecognised Launcher version.");
         }
-        else if (index==0) {
+        else if (index==launcherVersions.size()-1) {
             System.out.println("Already on newest Launcher version. Nothing to do.");
             return;
         }
 
-        Dependency dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar")).downloadDependencyHash();
+        Dependency dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar")).downloadDependencyHash();
         dep.downloadDependency();
         if (dep.maven().isEmpty() || !dep.maven().get().getDependencyPath().toFile().renameTo(Main.LauncherJar)) {
             System.err.println("Something went wrong whilst replacing the Launcher Jar.");
