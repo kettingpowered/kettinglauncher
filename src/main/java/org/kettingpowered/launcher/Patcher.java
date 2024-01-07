@@ -8,8 +8,6 @@ import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
-import org.kettingpowered.launcher.internal.utils.Hash;
-import org.kettingpowered.launcher.internal.utils.JarTool;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.utils.Processors;
 

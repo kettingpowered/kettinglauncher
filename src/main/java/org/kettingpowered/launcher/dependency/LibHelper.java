@@ -3,19 +3,19 @@ package org.kettingpowered.launcher.dependency;
 import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.Hash;
-import org.kettingpowered.launcher.internal.utils.JarTool;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +23,7 @@ import java.util.Optional;
 // Code inspired from package dev.vankka.dependencydownload, but changed over time.
 // Check them out: https://github.com/Vankka/DependencyDownload
 public final class LibHelper {
-    public static final Path baseDirPath = JarTool.getJarDir().toPath();
+    public static final Path baseDirPath = KettingLauncher.LauncherDir.toPath();
     
     public static final List<String> hashAlgorithms = List.of(
             "SHA-512",

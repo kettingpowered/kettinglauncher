@@ -2,14 +2,9 @@ package org.kettingpowered.launcher.internal.utils;
 
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.launcher.KettingLauncher;
-
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
@@ -17,13 +12,14 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-//Copied from https://git.magmafoundation.org/JustRed23/Magma-1-18-x/-/blob/1.18.x/magmalauncher/src/main/java/org/magmafoundation/magma/installer/NetworkUtils.java
+//Inspired by https://git.magmafoundation.org/JustRed23/Magma-1-18-x/-/blob/1.18.x/magmalauncher/src/main/java/org/magmafoundation/magma/installer/NetworkUtils.java
+//But changed a bit over time.
+@SuppressWarnings("CallToPrintStackTrace")
 public class NetworkUtils {
 
     private static final AtomicInteger threadNr = new AtomicInteger();

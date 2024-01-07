@@ -6,15 +6,12 @@ import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
 import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.betterui.BetterUI;
-import org.kettingpowered.launcher.dependency.AvailableMavenRepos;
 import org.kettingpowered.launcher.dependency.Dependency;
 import org.kettingpowered.launcher.dependency.LibHelper;
 import org.kettingpowered.launcher.dependency.Libraries;
 import org.kettingpowered.launcher.dependency.LibraryClassLoader;
 import org.kettingpowered.launcher.dependency.MavenArtifact;
 import org.kettingpowered.launcher.info.MCVersion;
-import org.kettingpowered.launcher.internal.utils.JarTool;
-import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.utils.FileUtils;
 import org.kettingpowered.launcher.utils.JavaHacks;
 
@@ -24,6 +21,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -39,6 +38,8 @@ import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKe
  * @author C0D3 M4513R
  */
 public class KettingLauncher {
+    public static final File LauncherJar = new File(URLDecoder.decode(KettingLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile(), StandardCharsets.UTF_8));
+    public static final File LauncherDir = LauncherJar.getParentFile();
     public static final String Version = (KettingLauncher.class.getPackage().getImplementationVersion() != null) ? KettingLauncher.class.getPackage().getImplementationVersion() : "dev-env";
     public static final String ArtifactID = "kettinglauncher";
     public static final int BufferSize = 1024*1024*32;
@@ -73,9 +74,7 @@ public class KettingLauncher {
             FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
         }
 
-//        JavaHacks.setStreamFactory();
         ensureOneServerAndUpdate(mc_version);
-//            JavaHacks.removeStreamFactory();
         
         ui.printTitle(mc_version);
 
@@ -96,19 +95,7 @@ public class KettingLauncher {
             return;
         }
 
-        final String newVersion = launcherVersions.get(0);
-        String path = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, newVersion, Optional.empty(), Optional.of("jar")).getPath();
-        boolean downloaded = false;
-        Exception exception = new Exception("Failed to download new Launcher version '"+newVersion+"' from all repositories.");
-        for(final String repo: AvailableMavenRepos.INSTANCE){
-            try{
-                NetworkUtils.downloadFile(repo + path, JarTool.getJar(), NetworkUtils.readFile(repo+path+".sha512"), "SHA-512");
-                downloaded = true;
-            }catch (Throwable throwable){
-                exception.addSuppressed(throwable);
-            }
-        }
-        if(!downloaded) throw exception;
+        LibHelper.downloadDependency(LibHelper.downloadDependencyHash(new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar"))));
         System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
     }
     
@@ -173,9 +160,9 @@ public class KettingLauncher {
                 LibHelper.downloadDependency(LibHelper.downloadDependencyHash(installerJsonArtifact));
                 LibHelper.downloadDependency(LibHelper.downloadDependencyHash(kettingLibsArtifact));
                 LibHelper.downloadDependency(LibHelper.downloadDependencyHash(universalJarArtifact));
-            }catch (IOException|NoSuchAlgorithmException ignored){
+            }catch (IOException|NoSuchAlgorithmException exception){
                 FileUtils.deleteDir(forgeDir);
-                throw ignored;
+                throw exception;
             }
         }
     }
@@ -207,12 +194,6 @@ public class KettingLauncher {
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
             addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
             addToClassPath(KettingFileVersioned.SERVER_JAR);
-//            addToClassPath(KettingFileVersioned.FORGE_UNIVERSAL_JAR);
-//            addToClassPath(KettingFileVersioned.FMLCORE);
-//            addToClassPath(KettingFileVersioned.FMLLOADER);
-//            addToClassPath(KettingFileVersioned.JAVAFMLLANGUAGE);
-//            addToClassPath(KettingFileVersioned.LOWCODELANGUAGE);
-//            addToClassPath(KettingFileVersioned.MCLANGUAGE);
         }
         Libraries.downloadMcp();
         
@@ -233,11 +214,9 @@ public class KettingLauncher {
             Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, loader)
                     .getMethod("main", String[].class)
                     .invoke(null, (Object) arg_list.toArray(String[]::new));
-        }
-//        catch (Throwable t) {
-//            throw new RuntimeException("Could not launch server", t);
-//        }
-        finally{
+        } catch (Throwable t) {
+            throw new RuntimeException("Could not launch server", t);
+        } finally{
             Thread.currentThread().setContextClassLoader(oldCL);
         }
     }

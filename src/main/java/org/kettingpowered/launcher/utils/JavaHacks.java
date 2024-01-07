@@ -11,26 +11,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 public final class JavaHacks {
-
-    //URL HACKS START - Fixes random crashes whenever a URL is created
-    public static void setStreamFactory() {
-        try {
-            var factory = Unsafe.lookup().findStaticGetter(URL.class, "defaultFactory", URLStreamHandlerFactory.class).invoke();
-            Unsafe.lookup().findStaticSetter(URL.class, "factory", URLStreamHandlerFactory.class).invoke(factory);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void removeStreamFactory() {
-        try {
-            Unsafe.lookup().findStaticSetter(URL.class, "factory", URLStreamHandlerFactory.class).invoke((Object) null);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-    //URL HACKS END
-
     //Loads the union file system (and others) from the classpath
     public static void loadExternalFileSystems(URLClassLoader loader) {
         try {

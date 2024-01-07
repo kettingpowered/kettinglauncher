@@ -3,7 +3,6 @@ package org.kettingpowered.launcher;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.launcher.internal.utils.JarTool;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 
 import java.io.IOException;
@@ -66,7 +65,7 @@ public class UpdateChecker {
             final JsonObject root = JsonParser.parseString(manifest).getAsJsonObject();
 
             String url = root.get("assets").getAsJsonArray().get(0).getAsJsonObject().get("browser_download_url").getAsString();
-            NetworkUtils.downloadFile(url, JarTool.getJar());
+            NetworkUtils.downloadFile(url, KettingLauncher.LauncherJar);
             System.out.println("Update downloaded successfully! Please restart the launcher.");
         } catch (Exception e) {
             throw new RuntimeException("Failed to check for updates", e);

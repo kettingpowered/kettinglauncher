@@ -8,6 +8,7 @@ import java.util.Optional;
  * @param hash a hash, of the downloaded file, with the hash-type below
  * @param hashType hash-type of the hash, conforming to <a href="https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#messagedigest-algorithms">Java Standard Hashing Algorithm Names</a>
  * @param maven maven artifact location
+ * @author C0D3 M4513R
  */
 public record Dependency(String hash, String hashType, Optional<MavenArtifact> maven) {
     public static @NotNull Optional<Dependency> parse(String line){

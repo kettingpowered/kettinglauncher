@@ -12,8 +12,4 @@ public final class AvailableMavenRepos {
             "https://libraries.minecraft.net/",
             "https://maven.minecraftforge.net/"
     );
-
-    public static boolean isLast(String repo) {
-        return INSTANCE.get(INSTANCE.size() - 1).equals(repo);
-    }
 }

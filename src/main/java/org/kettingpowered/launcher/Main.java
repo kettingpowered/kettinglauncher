@@ -1,10 +1,7 @@
 package org.kettingpowered.launcher;
 
-import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.dependency.Dependency;
 import org.kettingpowered.launcher.dependency.Libraries;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +13,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.jar.JarFile;
 
+/**
+ * @author C0D3 M4513R
+ */
 public class Main {
     public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
     public static final String FORGE_SERVER_ARTIFACT_ID = "forge";

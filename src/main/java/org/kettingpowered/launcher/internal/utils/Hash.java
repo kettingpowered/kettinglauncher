@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-// Code copied from package dev.vankka.dependencydownload, all credit goes to the author
+// Code inspired by package dev.vankka.dependencydownload, Some stuff has maybe? changed.
 // Check them out: https://github.com/Vankka/DependencyDownload
 public class Hash {
 
