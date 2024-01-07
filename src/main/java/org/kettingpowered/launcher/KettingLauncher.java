@@ -7,7 +7,6 @@ import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
 import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.Dependency;
-import org.kettingpowered.launcher.dependency.LibHelper;
 import org.kettingpowered.launcher.dependency.Libraries;
 import org.kettingpowered.launcher.dependency.LibraryClassLoader;
 import org.kettingpowered.launcher.dependency.MavenArtifact;
@@ -21,8 +20,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -38,16 +35,21 @@ import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKe
  * @author C0D3 M4513R
  */
 public class KettingLauncher {
-    public static final File LauncherJar = new File(URLDecoder.decode(KettingLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile(), StandardCharsets.UTF_8));
-    public static final File LauncherDir = LauncherJar.getParentFile();
     public static final String Version = (KettingLauncher.class.getPackage().getImplementationVersion() != null) ? KettingLauncher.class.getPackage().getImplementationVersion() : "dev-env";
     public static final String ArtifactID = "kettinglauncher";
     public static final int BufferSize = 1024*1024*32;
 
-    //Libs added here will get ignored by getClassPathFromShim
-    public static final String[] MANUALLY_PATCHED_LIBS = {
-            "com/mojang/brigadier",
-    };
+    //Libs added here will get ignored by lib (down-)loading and will also not get added to java.class.path  
+    public static final List<String> MANUALLY_PATCHED_LIBS = List.of(
+            "com/mojang/brigadier"
+    );
+
+    public static final List<MavenArtifact> AUTO_UPDATE_LIBS = List.of(
+        Main.KETTINGCOMMON,
+        new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcore", "1.0.0", Optional.empty(), Optional.of("jar")), 
+        new MavenArtifact(KettingConstants.KETTING_GROUP, "terminal-colors", "1.0.0", Optional.empty(), Optional.of("jar"))
+    );
+    
 
     private final Path eula = new File(KettingFiles.MAIN_FOLDER_FILE, "eula.txt").toPath();
     private final ParsedArgs args;
@@ -95,9 +97,9 @@ public class KettingLauncher {
             return;
         }
 
-        Dependency dep = LibHelper.downloadDependencyHash(new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar")));
-        LibHelper.downloadDependency(dep);
-        if (!LibHelper.getDependencyPath(dep).toFile().renameTo(KettingLauncher.LauncherJar)) {
+        Dependency dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(0), Optional.empty(), Optional.of("jar")).downloadDependencyHash();
+        dep.downloadDependency();
+        if (dep.maven().isEmpty() || !dep.maven().get().getDependencyPath().toFile().renameTo(Main.LauncherJar)) {
             System.err.println("Something went wrong whilst replacing the Launcher Jar.");
         }else{
             System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
@@ -161,10 +163,10 @@ public class KettingLauncher {
                 final MavenArtifact kettingLibsArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("ketting-libraries"), Optional.of("txt"));
                 final MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("universal"), Optional.of("jar"));
                 
-                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(serverBinPatchesArtifact));
-                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(installerJsonArtifact));
-                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(kettingLibsArtifact));
-                LibHelper.downloadDependency(LibHelper.downloadDependencyHash(universalJarArtifact));
+                serverBinPatchesArtifact.downloadDependencyAndHash();
+                installerJsonArtifact.downloadDependencyAndHash();
+                kettingLibsArtifact.downloadDependencyAndHash();
+                universalJarArtifact.downloadDependencyAndHash();
             }catch (IOException|NoSuchAlgorithmException exception){
                 FileUtils.deleteDir(forgeDir);
                 throw exception;
@@ -183,7 +185,7 @@ public class KettingLauncher {
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
                                 .filter(dep->dep.maven().isPresent())
-                                .filter(dep-> Arrays.stream(MANUALLY_PATCHED_LIBS).noneMatch(path -> dep.maven().get().getPath().startsWith(path)))
+                                .filter(dep-> MANUALLY_PATCHED_LIBS.stream().noneMatch(path -> dep.maven().get().getPath().startsWith(path)))
                                 .peek(dep-> builder.append(File.pathSeparator).append(new File(KettingFiles.LIBRARIES_DIR, dep.maven().get().getPath()).getAbsolutePath()))
                                 .toList(), 
                         true
@@ -193,7 +195,7 @@ public class KettingLauncher {
             builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
             MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
 
-            libs.loadDep(LibHelper.downloadDependencyHash(universalJarArtifact));
+            libs.addLoadedLib(universalJarArtifact.downloadDependencyAndHash());
             
             System.setProperty("java.class.path", builder.toString());
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
@@ -211,7 +213,7 @@ public class KettingLauncher {
         arg_list.add(args.launchTarget());
 
         ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-        try (URLClassLoader loader = new LibraryClassLoader(libs.getLoadedLibs(), KettingLauncher.class.getClassLoader())) {
+        try (URLClassLoader loader = new LibraryClassLoader(libs.getLoadedLibs())) {
             Thread.currentThread().setContextClassLoader(loader);
             JavaHacks.loadExternalFileSystems(loader);
             JavaHacks.clearReservedIdentifiers();
@@ -228,7 +230,7 @@ public class KettingLauncher {
 
     private void addToClassPath(File file) {
         try {
-            libs.addLoadedLib(file.toURI().toURL());//Yes, this is important, and fixes an issue with forge not finding language jars
+            libs.addLoadedLib(file);//Yes, this is important, and fixes an issue with forge not finding language jars
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
