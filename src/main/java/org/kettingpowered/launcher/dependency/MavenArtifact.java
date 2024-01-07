@@ -1,10 +1,7 @@
 package org.kettingpowered.launcher.dependency;
 
 import org.jetbrains.annotations.NotNull;
-import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.Main;
-import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 

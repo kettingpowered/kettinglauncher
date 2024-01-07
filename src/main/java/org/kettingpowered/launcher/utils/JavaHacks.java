@@ -1,9 +1,7 @@
 package org.kettingpowered.launcher.utils;
 
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLStreamHandlerFactory;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +19,7 @@ public final class JavaHacks {
 
             final Field installedProviders = FileSystemProvider.class.getDeclaredField("installedProviders");
             installedProviders.setAccessible(true);
-            List<FileSystemProvider> providers = new ArrayList<>((List<FileSystemProvider>) installedProviders.get(null));
+            @SuppressWarnings("unchecked") List<FileSystemProvider> providers = new ArrayList<>((List<FileSystemProvider>) installedProviders.get(null));
             providers.addAll(newProviders);
             installedProviders.set(null, providers);
         } catch (Exception e) {

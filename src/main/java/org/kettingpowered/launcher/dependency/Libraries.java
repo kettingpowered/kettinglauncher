@@ -3,12 +3,9 @@ package org.kettingpowered.launcher.dependency;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.kettingpowered.ketting.internal.KettingFileVersioned;
-import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.launcher.internal.utils.NetworkUtils;
+import org.kettingpowered.launcher.betterui.BetterUI;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;

@@ -67,6 +67,7 @@ public class KettingLauncher {
         final String mc_version = MCVersion.getMc(args);
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues. 
+        //noinspection ConstantValue
         if (false) { //todo: patcher update checking
             if (Main.DEBUG) System.out.println("Patcher needs updating.");
             //prematurely delete files to prevent errors
@@ -132,7 +133,7 @@ public class KettingLauncher {
         
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
         if (args.enableServerUpdator() || needsDownload) {
-            final List<String> serverVersions = MavenArtifact.getDepVersions(KettingConstants.KETTINGSERVER_GROUP, "forge");
+            final List<String> serverVersions = MavenArtifact.getDepVersions(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID);
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
             if (Main.DEBUG) {
                 System.out.println("Available Ketting versions");
@@ -155,10 +156,10 @@ public class KettingLauncher {
             KettingFiles.SERVER_LZMA.getParentFile().mkdirs();
 
             try{
-                final MavenArtifact serverBinPatchesArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("server-bin-patches"), Optional.of("lzma"));
-                final MavenArtifact installerJsonArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("installscript"), Optional.of("json"));
-                final MavenArtifact kettingLibsArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("ketting-libraries"), Optional.of("txt"));
-                final MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", mc_minecraft_forge, Optional.of("universal"), Optional.of("jar"));
+                final MavenArtifact serverBinPatchesArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("server-bin-patches"), Optional.of("lzma"));
+                final MavenArtifact installerJsonArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("installscript"), Optional.of("json"));
+                final MavenArtifact kettingLibsArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("ketting-libraries"), Optional.of("txt"));
+                final MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("universal"), Optional.of("jar"));
                 
                 LibHelper.downloadDependency(LibHelper.downloadDependencyHash(serverBinPatchesArtifact));
                 LibHelper.downloadDependency(LibHelper.downloadDependencyHash(installerJsonArtifact));
@@ -190,7 +191,7 @@ public class KettingLauncher {
             }
             
             builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
-            MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, "forge", KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
+            MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
 
             libs.loadDep(LibHelper.downloadDependencyHash(universalJarArtifact));
             

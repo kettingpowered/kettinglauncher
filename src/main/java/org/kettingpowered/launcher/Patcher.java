@@ -1,6 +1,9 @@
 package org.kettingpowered.launcher;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -11,9 +14,15 @@ import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.utils.Processors;
 
-import java.io.*;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Patcher {
 
@@ -23,7 +32,7 @@ public class Patcher {
     private final PrintStream out = System.out;
     private PrintStream log;
 
-    public Patcher() throws IOException, NoSuchAlgorithmException {
+    public Patcher() throws IOException {
         downloadServer();
         readInstallScript();
         prepareTokens();
@@ -110,7 +119,7 @@ public class Patcher {
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
 
-    private void readAndExecuteProcessors() throws NoSuchAlgorithmException, IOException {
+    private void readAndExecuteProcessors() throws IOException {
         final File logFile = KettingFiles.PATCHER_LOGS;
         if (!logFile.exists()) {
             try {

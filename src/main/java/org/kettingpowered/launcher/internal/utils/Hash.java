@@ -30,12 +30,6 @@ public class Hash {
         return getHash(digest);
     }
 
-    public static String getHash(byte[] bytes, String algorithm) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance(algorithm);
-        digest.update(bytes);
-        return getHash(digest);
-    }
-
     public static String getHash(MessageDigest digest) {
         StringBuilder result = new StringBuilder();
         for (byte b : digest.digest()) {
