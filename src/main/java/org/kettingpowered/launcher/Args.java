@@ -62,7 +62,7 @@ public class Args {
 
     private @Nullable String getArg(String arg) {
         int index = args.indexOf(arg);
-        if (index > 0) {
+        if (index >= 0) {
             args.remove(index); //remove arg
             return args.remove(index); //this should be the value to that arg
         }
