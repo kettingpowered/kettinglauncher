@@ -68,9 +68,8 @@ public class KettingLauncher {
     public void init() throws Exception {
         final String mc_version = MCVersion.getMc(args);
         //This cannot get moved past the ensureOneServerAndUpdate call. 
-        //It will cause the just downloaded server to be removed, which causes issues. 
-        //noinspection ConstantValue
-        if (false) { //todo: patcher update checking
+        //It will cause the just downloaded server to be removed, which causes issues.
+        if (Patcher.checkUpdateNeeded()) {
             if (Main.DEBUG) System.out.println("Patcher needs updating.");
             //prematurely delete files to prevent errors
             FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
@@ -147,7 +146,6 @@ public class KettingLauncher {
             }
             serverVersion = parsedServerVersions.get(0);
         }
-        //todo: Server version is populated here. We could theoretically do what used to be the patched invalidation check here. 
         if (args.enableServerUpdator() || needsDownload) {
             final String mc_minecraft_forge = String.format("%s-%s-%s", mc_mmp, serverVersion.t1(), serverVersion.t2());
             final File forgeDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR,mc_minecraft_forge);
@@ -162,8 +160,12 @@ public class KettingLauncher {
                 final MavenArtifact installerJsonArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("installscript"), Optional.of("json"));
                 final MavenArtifact kettingLibsArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("ketting-libraries"), Optional.of("txt"));
                 final MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, mc_minecraft_forge, Optional.of("universal"), Optional.of("jar"));
-                
-                serverBinPatchesArtifact.downloadDependencyAndHash();
+
+                //noinspection ResultOfMethodCallIgnored
+                KettingFiles.SERVER_LZMA.getParentFile().mkdirs();
+                //noinspection ResultOfMethodCallIgnored
+                KettingFiles.SERVER_LZMA.delete();
+                if (!serverBinPatchesArtifact.downloadDependencyAndHash().renameTo(KettingFiles.SERVER_LZMA)) System.err.println("An error occurred, whilst moving Server Binary Patches to it's correct location. There might be errors Patching!");
                 installerJsonArtifact.downloadDependencyAndHash();
                 kettingLibsArtifact.downloadDependencyAndHash();
                 universalJarArtifact.downloadDependencyAndHash();
@@ -205,7 +207,7 @@ public class KettingLauncher {
         Libraries.downloadMcp();
         
         
-        new Patcher(); //todo: patcher update checking 
+        if (Patcher.checkUpdateNeeded()) new Patcher();
         
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());

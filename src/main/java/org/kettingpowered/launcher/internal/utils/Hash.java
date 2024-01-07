@@ -1,6 +1,8 @@
 package org.kettingpowered.launcher.internal.utils;
 
 
+import org.kettingpowered.launcher.KettingLauncher;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,7 +23,7 @@ public class Hash {
     public static String getHash(InputStream stream, String algorithm) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance(algorithm);
 
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[KettingLauncher.BufferSize];
         int total;
         while ((total = stream.read(buffer)) != -1) {
             digest.update(buffer, 0, total);

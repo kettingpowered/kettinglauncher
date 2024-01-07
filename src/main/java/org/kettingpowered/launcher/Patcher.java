@@ -11,14 +11,19 @@ import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
+import org.kettingpowered.launcher.internal.utils.Hash;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.utils.Processors;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +37,7 @@ public class Patcher {
     private final PrintStream out = System.out;
     private PrintStream log;
 
-    public Patcher() throws IOException {
+    public Patcher() throws IOException, NoSuchAlgorithmException {
         downloadServer();
         readInstallScript();
         prepareTokens();
@@ -119,7 +124,7 @@ public class Patcher {
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
 
-    private void readAndExecuteProcessors() throws IOException {
+    private void readAndExecuteProcessors() throws IOException, NoSuchAlgorithmException {
         final File logFile = KettingFiles.PATCHER_LOGS;
         if (!logFile.exists()) {
             try {
@@ -181,6 +186,43 @@ public class Patcher {
                     throw new RuntimeException("A processor ran into an error", e);
                 }
             });
+        }
+        writeStoredHashes();
+    }
+    private static void writeStoredHashes() throws IOException, NoSuchAlgorithmException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(KettingFiles.STORED_HASHES))){
+            writer
+                    .append("installJson=")
+                    .append(Hash.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"))
+                    .append("\nserverLzma=")
+                    .append(Hash.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"))
+                    .append("\nserver=")
+                    .append(Hash.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
+        }
+    }
+    public static boolean checkUpdateNeeded() {
+        if (!KettingFiles.STORED_HASHES.exists()) return true;
+        try (BufferedReader reader = new BufferedReader(new FileReader(KettingFiles.STORED_HASHES))){
+            return !reader.lines()
+                    .allMatch(string -> {
+                        String[] args = string.split("=");
+                        String value = args[1].trim();
+                        try {
+                            return switch (args[0].trim()) {
+                                case "installJson" ->
+                                        value.equals(Hash.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"));
+                                case "serverLzma" ->
+                                        value.equals(Hash.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
+                                case "server" ->
+                                    value.equals(Hash.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
+                                default -> false;
+                            };
+                        } catch (NoSuchAlgorithmException | IOException e) {
+                            return false;
+                        }
+                    });
+        }catch (Exception ignored) {
+            return true;
         }
     }
 
