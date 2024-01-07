@@ -2,6 +2,7 @@ package org.kettingpowered.launcher;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.betterui.BetterUI;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class Args {
     
     public ParsedArgs parse(BetterUI ui, Path eula) throws IOException {
         if (containsArg("-help") || containsArg("--help")) {
-            ui.printHelp();
+            printHelp();
             System.exit(0);
         }
 
@@ -42,6 +43,21 @@ public class Args {
         @NotNull String target = Objects.requireNonNullElse(getArg("--launchTarget"), "forge_server");
         @Nullable String minecraftVersion = getArg("--minecraftVersion");
         return new ParsedArgs(Collections.unmodifiableList(args), enableServerUpdate, enableLauncherUpdate, target, minecraftVersion);
+    }
+    
+    private static void printHelp(){
+        System.out.println(KettingConstants.NAME + " Help");
+        System.out.println("-".repeat(KettingConstants.NAME.length() + 5));
+        System.out.println("Usage: java -jar your-jar-name.jar [options]");
+        System.out.println("Options:");
+        System.out.println("  -help               Shows this help message");
+        System.out.println("  -noui               Disables the fancy UI");
+        System.out.println("  -nologo             Disables the big logo");
+        System.out.println("  -accepteula         Accepts the EULA automatically");
+        System.out.println("  -dau or -daus       Disables automatic server updates");
+        System.out.println("  -daul               Disables automatic launcher updates");
+        System.out.println("  --launchTarget      Sets the default launchTarget. Exists mostly for debug purposes.");
+        System.out.println("  --minecraftVersion  Sets the Minecraft Version of the Server. Will update the server to this version, if a Ketting version on another Minecraft Version is used.");
     }
 
     private @Nullable String getArg(String arg) {
