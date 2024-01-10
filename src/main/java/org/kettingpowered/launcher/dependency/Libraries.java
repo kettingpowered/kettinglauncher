@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 /**
@@ -28,6 +29,7 @@ public class Libraries {
     public Libraries() {}
     public void downloadExternal(List<Dependency> dependencies, boolean progressBar) {
         Stream<Dependency> dependencyStream;
+        AtomicReference<ProgressBar> progressBarAtomicReference = new AtomicReference<>();
         if (progressBar) {
             ProgressBarBuilder builder = new ProgressBarBuilder()
                     .setTaskName("Loading libs...")
@@ -35,24 +37,31 @@ public class Libraries {
                     .setMaxRenderedLength(BetterUI.LOGO_LENGTH)
                     .setStyle(ProgressBarStyle.ASCII)
                     .setUpdateIntervalMillis(100)
-                    .setInitialMax(dependencies.size());
-            
+                    .setInitialMax(dependencies.size()); 
+            progressBarAtomicReference.set(builder.build());
             dependencyStream = ProgressBar.wrap(dependencies.stream(), builder);
         } else dependencyStream = dependencies.stream();
         
-        dependencyStream.forEach(this::loadDep);
+        dependencyStream.parallel()
+                .map(this::downloadDep)
+                .forEach(file->{
+                    synchronized (loadedLibs){
+                        try {
+                            addLoadedLib(file);
+                        }catch (MalformedURLException e){
+                            throw new RuntimeException("Something went wrong whilst trying to load dependencies", e);
+                        }
+                        if (progressBar) progressBarAtomicReference.get().step();
+                    }
+                });
+        if (progressBar) progressBarAtomicReference.get().close();
     }
     
-    public void loadDep(Dependency dep) {
+    private File downloadDep(Dependency dep) {
         if (dep.maven().isEmpty()) throw new IllegalStateException("Loading a Dependency with no maven coordinates is unsupported.");
         if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().get().group())) {
             if (Main.DEBUG) System.out.println("Skipping download of "+dep+", since it should be bundled.");
-            try {
-                addLoadedLib(dep.maven().get().getDependencyPath());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-            return;
+            return dep.maven().get().getDependencyPath().toFile().getAbsoluteFile();
         }
         File depFile;
         try{
@@ -64,9 +73,9 @@ public class Libraries {
             }else {
                 depFile = dep.downloadDependency();
             }
-            addLoadedLib(depFile);
+            return depFile;
         }catch (Exception e){
-            throw new RuntimeException("Something went wrong while trying to load dependencies", e);
+            throw new RuntimeException("Something went wrong whilst trying to load dependencies", e);
         }
     }
 

@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKettingServerVersionList;
 
@@ -275,11 +276,18 @@ public class KettingLauncher {
                 KettingFiles.SERVER_LZMA.getParentFile().mkdirs();
                 //noinspection ResultOfMethodCallIgnored
                 KettingFiles.SERVER_LZMA.delete();
-                if (!serverBinPatchesArtifact.downloadDependencyAndHash().renameTo(KettingFiles.SERVER_LZMA)) System.err.println("An error occurred, whilst moving Server Binary Patches to it's correct location. There might be errors Patching!");
-                installerJsonArtifact.downloadDependencyAndHash();
-                kettingLibsArtifact.downloadDependencyAndHash();
-                universalJarArtifact.downloadDependencyAndHash();
-            }catch (IOException|NoSuchAlgorithmException exception){
+                Stream.of(serverBinPatchesArtifact, installerJsonArtifact, kettingLibsArtifact, universalJarArtifact)
+                        .parallel()
+                        .forEach(element->{
+                            try{
+                                if (element == serverBinPatchesArtifact && !serverBinPatchesArtifact.downloadDependencyAndHash().renameTo(KettingFiles.SERVER_LZMA))
+                                    System.err.println("An error occurred, whilst moving Server Binary Patches to it's correct location. There might be errors Patching!");
+                                else element.downloadDependencyAndHash();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            }catch (Throwable exception){
                 FileUtils.deleteDir(forgeDir);
                 throw exception;
             }
@@ -288,6 +296,16 @@ public class KettingLauncher {
 
     void launch() throws Exception {
         Libraries libs = new Libraries();
+        Thread downloadMCP = new Thread(()-> {
+            try {
+                Libraries.downloadMcp();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        downloadMCP.setDaemon(true);
+        downloadMCP.setName("Download-MCP");
+        downloadMCP.start();
         {
             StringBuilder builder = new StringBuilder();
             try (BufferedReader stream = new BufferedReader(new FileReader(KettingFileVersioned.FORGE_KETTING_LIBS))) {
@@ -313,7 +331,7 @@ public class KettingLauncher {
             addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
             addToClassPath(KettingFileVersioned.SERVER_JAR);
         }
-        Libraries.downloadMcp();
+        downloadMCP.join();
         
         
         if (Patcher.checkUpdateNeeded()) new Patcher();
