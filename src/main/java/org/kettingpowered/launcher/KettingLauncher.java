@@ -204,12 +204,11 @@ public class KettingLauncher {
             return;
         }
 
-        Dependency dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar")).downloadDependencyHash();
-        dep.downloadDependency();
-        if (dep.maven().isEmpty() || !dep.maven().get().getDependencyPath().toFile().renameTo(Main.LauncherJar)) {
-            System.err.println("Something went wrong whilst replacing the Launcher Jar.");
-        }else{
+        final MavenArtifact dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar"));
+        if (dep.downloadDependencyAndHash().renameTo(Main.LauncherJar)) {
             System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
+        }else{
+            System.err.println("Something went wrong whilst replacing the Launcher Jar.");
         }
     }
     private static void deleteOtherVersions(final String version){
