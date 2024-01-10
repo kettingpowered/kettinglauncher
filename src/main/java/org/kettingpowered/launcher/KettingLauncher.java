@@ -1,5 +1,6 @@
 package org.kettingpowered.launcher;
 
+import org.jetbrains.annotations.NotNull;
 import org.kettingpowered.ketting.internal.*;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.Dependency;
@@ -7,18 +8,19 @@ import org.kettingpowered.launcher.dependency.Libraries;
 import org.kettingpowered.launcher.dependency.LibraryClassLoader;
 import org.kettingpowered.launcher.dependency.MavenArtifact;
 import org.kettingpowered.launcher.info.MCVersion;
+import org.kettingpowered.launcher.internal.utils.Hash;
 import org.kettingpowered.launcher.utils.FileUtils;
 import org.kettingpowered.launcher.utils.JavaHacks;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKettingServerVersionList;
@@ -28,6 +30,43 @@ import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKe
  */
 public class KettingLauncher {
     public static final String Version = (KettingLauncher.class.getPackage().getImplementationVersion() != null) ? KettingLauncher.class.getPackage().getImplementationVersion() : "dev-env";
+    public static final boolean Bundled;
+    public static final String Bundled_McVersion;
+    public static final String Bundled_ForgeVersion;
+    public static final String Bundled_KettingVersion;
+
+    static {
+        String Bundled_KettingVersion1 = null;
+        String Bundled_ForgeVersion1 = null;
+        String Bundled_McVersion1 = null;
+        boolean Bundled1 = false;
+
+        
+        try {
+            for(final Enumeration<URL> url_enum = KettingLauncher.class.getClassLoader().getResources("META-INF/MANIFEST.MF"); url_enum.hasMoreElements(); ){
+                try{
+                    Attributes attr = new Manifest(url_enum.nextElement().openStream()).getMainAttributes();
+                    if (!Main.class.getName().equals(attr.getValue("Main-Class")) || !Main.class.getName().equals(attr.getValue("Launcher-Agent-Class"))) continue;
+                    Bundled1=Boolean.parseBoolean(attr.getValue("Bundled"));
+                    if (!Bundled1) break;
+                    Bundled_McVersion1 = attr.getValue("MinecraftVersion");
+                    Bundled_ForgeVersion1 = attr.getValue("ForgeVersion");
+                    Bundled_KettingVersion1 = attr.getValue("KettingVersion");
+                } catch (IOException ignored){}
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Bundled_KettingVersion = Bundled_KettingVersion1;
+        Bundled_ForgeVersion = Bundled_ForgeVersion1;
+        Bundled_McVersion = Bundled_McVersion1;
+        Bundled = Bundled1;
+        if (Main.DEBUG && Bundled){
+            System.out.println("We are in a bundled Jar, with McVersion: "+Bundled_McVersion + " ForgeVersion: "+Bundled_ForgeVersion+" KettingVersion: "+Bundled_KettingVersion);
+        }
+    }
+
     public static final String ArtifactID = "kettinglauncher";
     public static final int BufferSize = 1024*1024*32;
 
@@ -58,7 +97,10 @@ public class KettingLauncher {
      * Also takes care of server updates.
      */
     public void init() throws Exception {
-        final String mc_version = MCVersion.getMc(args);
+        final String mc_version;
+        if (Main.DEBUG && Bundled) System.out.println("We are in a bundled jar. Read Version information from manifest.");
+        if (!Bundled) mc_version = MCVersion.getMc(args);
+        else mc_version = Bundled_McVersion;
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues.
         if (Patcher.checkUpdateNeeded()) {
@@ -68,16 +110,82 @@ public class KettingLauncher {
             FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
         }
 
-        ensureOneServerAndUpdate(mc_version);
-        
+        if(!Bundled) ensureOneServerAndUpdate(mc_version);
+        else extractBundledContent();
+
         ui.printTitle(mc_version);
 
-        if (args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
+        if (!Bundled && args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
 
         if(!ui.checkEula(eula)) System.exit(0);
         
     }
-    
+
+    private static void extractBundledContent() throws Exception {
+        Exception exception = new Exception("Failed to extract some of the Bundled Jar content");
+        boolean failed = false;
+        final String version = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
+        deleteOtherVersions(version);
+        for(final String prefix : new String[]{"fmlloader", "fmlcore", "javafmllanguage", "lowcodelanguage", "mclanguage"}){
+            final String fileName = prefix+"-"+version + ".jar";
+            final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
+            try {
+                extractJarContent(KettingFiles.DATA_DIR+fileName, file);
+            } catch (IOException e) {
+                failed=true;
+                exception.addSuppressed(e);
+            }
+        }
+        final String fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
+        final File folder = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, version);
+        try{
+            extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
+        } catch (IOException e) {
+            failed=true;
+            exception.addSuppressed(e);
+        }
+        try{
+            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"));
+        } catch (IOException e) {
+            failed=true;
+            exception.addSuppressed(e);
+        }
+        try{
+            extractJarContent(KettingFiles.DATA_DIR+fileName+"-installscript.json", new File(folder, fileName+"-installscript.json"));
+        } catch (IOException e) {
+            failed=true;
+            exception.addSuppressed(e);
+        }
+        try{
+            extractJarContent(KettingFiles.DATA_DIR+"server.lzma", KettingFiles.SERVER_LZMA);
+        } catch (IOException e) {
+            failed=true;
+            exception.addSuppressed(e);
+        }
+        if (failed) throw exception;
+    }
+
+    public static void extractJarContent(@NotNull String from, @NotNull File to) throws IOException {
+        try (InputStream internalFile = KettingLauncher.class.getClassLoader().getResourceAsStream(from)) {
+            if (internalFile == null)
+                throw new IOException("Failed to extract file '" + from + "', file not found");
+
+            byte[] internalFileContent = internalFile.readAllBytes();
+            if (!to.exists() || !Hash.getHash(to, "SHA3-512").equals(Hash.getHash(new ByteArrayInputStream(internalFileContent), "SHA3-512"))) {
+                //noinspection ResultOfMethodCallIgnored
+                to.getParentFile().mkdirs();
+                //noinspection ResultOfMethodCallIgnored
+                to.createNewFile();
+
+                try (FileOutputStream fos = new FileOutputStream(to)) {
+                    fos.write(internalFileContent);
+                }
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("Failed to extract file '" + from + "', failed to get hash algorithm", e);
+        }
+    }
+
     private void updateLauncher() throws Exception {
         if ("dep-env".equals(Version)) return;
         final List<MajorMinorPatchVersion<String>> launcherVersions = MavenArtifact.getDepVersions(KettingConstants.KETTING_GROUP, ArtifactID)
@@ -104,6 +212,11 @@ public class KettingLauncher {
             System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
         }
     }
+    private static void deleteOtherVersions(final String version){
+        Arrays.stream(Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]))
+                .filter(file -> !Objects.equals(file.getName(),version))
+                .forEach(FileUtils::deleteDir);
+    }
     
     private void ensureOneServerAndUpdate(final String mc_version) throws Exception {
         File[] kettingServerVersions = Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]);
@@ -124,9 +237,7 @@ public class KettingLauncher {
         else if(versions.size() > 1) {
             serverVersion = versions.get(0);
             Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = serverVersion;
-            Arrays.stream(Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]))
-                    .filter(file -> !Objects.equals(file.getName(),String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2())))
-                    .forEach(FileUtils::deleteDir);
+            deleteOtherVersions(String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2()));
         }else{
             serverVersion = versions.get(0);
         }
@@ -196,8 +307,7 @@ public class KettingLauncher {
             
             builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
             MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
-
-            libs.addLoadedLib(universalJarArtifact.downloadDependencyAndHash());
+            libs.addLoadedLib(universalJarArtifact.getDependencyPath());
             
             System.setProperty("java.class.path", builder.toString());
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");

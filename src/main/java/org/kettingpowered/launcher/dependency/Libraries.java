@@ -45,6 +45,15 @@ public class Libraries {
     
     public void loadDep(Dependency dep) {
         if (dep.maven().isEmpty()) throw new IllegalStateException("Loading a Dependency with no maven coordinates is unsupported.");
+        if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().get().group())) {
+            if (Main.DEBUG) System.out.println("Skipping download of "+dep+", since it should be bundled.");
+            try {
+                addLoadedLib(dep.maven().get().getDependencyPath());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            return;
+        }
         File depFile;
         try{
             if (KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().get().equalsIgnoringVersion(artifact))) {
@@ -55,13 +64,8 @@ public class Libraries {
             }else {
                 depFile = dep.downloadDependency();
             }
-        }catch (Exception e){
-            throw new RuntimeException(e);
-        }
-        //AUTO_UPDATE_LIBS end
-        try {
             addLoadedLib(depFile);
-        } catch (Exception e) {
+        }catch (Exception e){
             throw new RuntimeException("Something went wrong while trying to load dependencies", e);
         }
     }
