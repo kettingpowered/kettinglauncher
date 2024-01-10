@@ -74,7 +74,10 @@ public class Args {
 
     private boolean containsArg(String arg) {
         int index = args.indexOf(arg);
-        if (index >= 0) return true;
+        if (index >= 0){
+            args.remove(index);
+            return true;
+        }
         arg = arg.replace("-","");
         if (System.getenv("kettinglauncher_" + arg) != null) return true;
         if (System.getProperty("kettinglauncher."  + arg) != null) return true;
