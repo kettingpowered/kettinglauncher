@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
 
 /**
  * @author C0D3 M4513R
@@ -28,7 +27,6 @@ public class Libraries {
     
     public Libraries() {}
     public void downloadExternal(List<Dependency<MavenArtifact>> dependencies, boolean progressBar) {
-        Stream<Dependency<MavenArtifact>> dependencyStream;
         AtomicReference<ProgressBar> progressBarAtomicReference = new AtomicReference<>();
         if (progressBar) {
             ProgressBarBuilder builder = new ProgressBarBuilder()
