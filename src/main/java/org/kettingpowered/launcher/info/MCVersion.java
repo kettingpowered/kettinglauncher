@@ -70,7 +70,7 @@ public class MCVersion {
             List<String> mc_versions = Arrays.stream(Objects.requireNonNullElse(mcp_versions, new File[0]))
                     .filter(Objects::nonNull)
                     .map(File::getName)
-                    .map(name -> name.substring(name.indexOf('-')))
+                    .map(name -> name.substring(0, name.indexOf('-')))
                     .distinct()
                     .toList();
             if (mc_versions.size() == 1){
