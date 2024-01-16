@@ -39,10 +39,9 @@ public class Libraries {
                     .setUpdateIntervalMillis(100)
                     .setInitialMax(dependencies.size()); 
             progressBarAtomicReference.set(builder.build());
-            dependencyStream = ProgressBar.wrap(dependencies.stream(), builder);
-        } else dependencyStream = dependencies.stream();
+        }
         
-        dependencyStream.parallel()
+        dependencies.parallelStream()
                 .map(this::downloadDep)
                 .forEach(file->{
                     synchronized (loadedLibs){
