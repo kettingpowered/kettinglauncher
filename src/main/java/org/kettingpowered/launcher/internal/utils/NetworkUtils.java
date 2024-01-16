@@ -65,7 +65,7 @@ public class NetworkUtils {
             return null;
         }, downloadSrvc).get(20, TimeUnit.SECONDS);
         rbc.close();
-        String hash = Hash.getHash(f, hashFormat);
+        String hash = HashUtils.getHash(f, hashFormat);
         if(expectedHash != null && !hash.equals(expectedHash.toLowerCase())) {
             //noinspection ResultOfMethodCallIgnored
             f.delete();

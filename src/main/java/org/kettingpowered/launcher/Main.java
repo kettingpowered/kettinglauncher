@@ -1,10 +1,7 @@
 package org.kettingpowered.launcher;
 
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.launcher.dependency.AgentClassLoader;
-import org.kettingpowered.launcher.dependency.Dependency;
-import org.kettingpowered.launcher.dependency.Libraries;
-import org.kettingpowered.launcher.dependency.MavenArtifact;
+import org.kettingpowered.launcher.dependency.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -65,7 +62,7 @@ public class Main {
     
     @SuppressWarnings("unused")
     public static Object[] agent_pre_kettingcommon() throws Exception{
-        List<Dependency> dependencyList;
+        List<Dependency<MavenArtifact>> dependencyList;
         //Download all needed libs for the Launcher itself
         try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
             dependencyList = stream.lines()
@@ -77,33 +74,27 @@ public class Main {
         Dependency kettingcommon = dependencyList.stream()
                 .filter(dep->{
                     try {
-                        return dep.maven().isPresent() && dep.maven().get().equalsIgnoringVersion(Main.KETTINGCOMMON);
+                        return dep.maven().equalsIgnoringVersion(Main.KETTINGCOMMON);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 })
                 .toArray(Dependency[]::new)[0];
-        kettingcommon.downloadDependency();
-        assert kettingcommon.maven().isPresent();
-        URL urlKettingCommon = kettingcommon.maven().get().getDependencyPath().toAbsolutePath().toUri().toURL();
+        kettingcommon.download();
+        URL urlKettingCommon = Maven.getDependencyPath(kettingcommon.maven().getPath()).toAbsolutePath().toUri().toURL();
         return new Object[]{dependencyList, urlKettingCommon};
     }
 
     @SuppressWarnings({"unused", "unchecked"})
     public static void agent_post_kettingcommon(List<Object> dependencyList, Instrumentation inst) {
         final Libraries libs = new Libraries();
-        List<Dependency> deps = dependencyList.stream()
+        List<Dependency<MavenArtifact>> deps = dependencyList.stream()
                 .map(obj->{
                     try{
                         Class<?> otherDepClass = obj.getClass();
-                        Optional<Object> mavenOpt = (Optional<Object>) otherDepClass.getDeclaredMethod("maven").invoke(obj);
-                        assert mavenOpt.isPresent();
-                        Object maven = mavenOpt.get();
-                        Class<?> otherMavenClass = maven.getClass();
-                        return new Dependency(
-                                (String) otherDepClass.getDeclaredMethod("hash").invoke(obj),
-                                (String) otherDepClass.getDeclaredMethod("hashType").invoke(obj),
-                                Optional.of(reconstructMavenArtifact(maven))
+                        return new Dependency<>(
+                                reconstructHash(otherDepClass.getDeclaredMethod("hash").invoke(obj)),
+                                reconstructMavenArtifact(otherDepClass.getDeclaredMethod("maven").invoke(obj))
                         );
                     }catch (Exception e){
                         throw new RuntimeException(e);
@@ -138,6 +129,18 @@ public class Main {
                 (String) version.get(maven),
                 (Optional<String>) classifier.get(maven),
                 (Optional<String>) extension.get(maven)
+        );
+    }
+
+    private static Hash reconstructHash(Object maven) throws Exception{
+        Class<?> otherMavenClass = maven.getClass();
+        Field hash = otherMavenClass.getDeclaredField("hash");
+        Field algorithm = otherMavenClass.getDeclaredField("algorithm");
+        hash.setAccessible(true);
+        algorithm.setAccessible(true);
+        return new Hash(
+                (String) hash.get(maven),
+                (String) algorithm.get(maven)
         );
     }
 

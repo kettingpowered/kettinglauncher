@@ -11,7 +11,7 @@ import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
-import org.kettingpowered.launcher.internal.utils.Hash;
+import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.utils.Processors;
 
@@ -193,11 +193,11 @@ public class Patcher {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(KettingFiles.STORED_HASHES))){
             writer
                     .append("installJson=")
-                    .append(Hash.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"))
+                    .append(HashUtils.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"))
                     .append("\nserverLzma=")
-                    .append(Hash.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"))
+                    .append(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"))
                     .append("\nserver=")
-                    .append(Hash.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
+                    .append(HashUtils.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
         }
     }
     public static boolean checkUpdateNeeded() {
@@ -210,11 +210,11 @@ public class Patcher {
                         try {
                             return switch (args[0].trim()) {
                                 case "installJson" ->
-                                        value.equals(Hash.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"));
+                                        value.equals(HashUtils.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"));
                                 case "serverLzma" ->
-                                        value.equals(Hash.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
+                                        value.equals(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
                                 case "server" ->
-                                    value.equals(Hash.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
+                                    value.equals(HashUtils.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
                                 default -> false;
                             };
                         } catch (NoSuchAlgorithmException | IOException e) {

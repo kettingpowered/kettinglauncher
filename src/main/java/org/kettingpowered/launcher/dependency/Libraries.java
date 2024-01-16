@@ -27,8 +27,8 @@ public class Libraries {
     private final List<URL> loadedLibs = new ArrayList<>();
     
     public Libraries() {}
-    public void downloadExternal(List<Dependency> dependencies, boolean progressBar) {
-        Stream<Dependency> dependencyStream;
+    public void downloadExternal(List<Dependency<MavenArtifact>> dependencies, boolean progressBar) {
+        Stream<Dependency<MavenArtifact>> dependencyStream;
         AtomicReference<ProgressBar> progressBarAtomicReference = new AtomicReference<>();
         if (progressBar) {
             ProgressBarBuilder builder = new ProgressBarBuilder()
@@ -57,21 +57,20 @@ public class Libraries {
         if (progressBar) progressBarAtomicReference.get().close();
     }
     
-    private File downloadDep(Dependency dep) {
-        if (dep.maven().isEmpty()) throw new IllegalStateException("Loading a Dependency with no maven coordinates is unsupported.");
-        if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().get().group())) {
+    private File downloadDep(Dependency<MavenArtifact> dep) {
+        if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().group())) {
             if (Main.DEBUG) System.out.println("Skipping download of "+dep+", since it should be bundled.");
-            return dep.maven().get().getDependencyPath().toFile().getAbsoluteFile();
+            return Maven.getDependencyPath(dep.maven().getPath()).toFile().getAbsoluteFile();
         }
         File depFile;
         try{
-            if (KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().get().equalsIgnoringVersion(artifact))) {
-                MavenArtifact artifact = dep.maven().get().getLatestMinorPatch();
-                if (Main.DEBUG) System.out.println("Using "+artifact+" instead of "+dep.maven().get());
-                if (!artifact.equals(dep.maven().get())) depFile = artifact.downloadDependencyAndHash();
-                else depFile = dep.downloadDependency();
+            if (KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().equalsIgnoringVersion(artifact))) {
+                MavenArtifact artifact = dep.maven().getLatestMinorPatch();
+                if (Main.DEBUG) System.out.println("Using "+artifact+" instead of "+dep.maven());
+                if (!artifact.equals(dep.maven())) depFile = artifact.download();
+                else depFile = dep.download();
             }else {
-                depFile = dep.downloadDependency();
+                depFile = dep.download();
             }
             return depFile;
         }catch (Exception e){
@@ -82,7 +81,7 @@ public class Libraries {
     public static void downloadMcp() throws Exception {
         String mcMcp = KettingConstants.MINECRAFT_VERSION + "-" + KettingConstants.MCP_VERSION;
         MavenArtifact mcp_artifact = new MavenArtifact("de.oceanlabs.mcp", "mcp_config", mcMcp, Optional.empty(), Optional.of("zip"));
-        mcp_artifact.downloadDependencyAndHash();
+        mcp_artifact.download();
     }
 
     public void addLoadedLib(File file) throws MalformedURLException {

@@ -3,12 +3,9 @@ package org.kettingpowered.launcher;
 import org.jetbrains.annotations.NotNull;
 import org.kettingpowered.ketting.internal.*;
 import org.kettingpowered.launcher.betterui.BetterUI;
-import org.kettingpowered.launcher.dependency.Dependency;
-import org.kettingpowered.launcher.dependency.Libraries;
-import org.kettingpowered.launcher.dependency.LibraryClassLoader;
-import org.kettingpowered.launcher.dependency.MavenArtifact;
+import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
-import org.kettingpowered.launcher.internal.utils.Hash;
+import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.utils.FileUtils;
 import org.kettingpowered.launcher.utils.JavaHacks;
 
@@ -172,7 +169,7 @@ public class KettingLauncher {
                 throw new IOException("Failed to extract file '" + from + "', file not found");
 
             byte[] internalFileContent = internalFile.readAllBytes();
-            if (!to.exists() || !Hash.getHash(to, "SHA3-512").equals(Hash.getHash(new ByteArrayInputStream(internalFileContent), "SHA3-512"))) {
+            if (!to.exists() || !HashUtils.getHash(to, "SHA3-512").equals(HashUtils.getHash(new ByteArrayInputStream(internalFileContent), "SHA3-512"))) {
                 //noinspection ResultOfMethodCallIgnored
                 to.getParentFile().mkdirs();
                 //noinspection ResultOfMethodCallIgnored
@@ -189,7 +186,7 @@ public class KettingLauncher {
 
     private void updateLauncher() throws Exception {
         if ("dep-env".equals(Version)) return;
-        final List<MajorMinorPatchVersion<String>> launcherVersions = MavenArtifact.getDepVersions(KettingConstants.KETTING_GROUP, ArtifactID)
+        final List<MajorMinorPatchVersion<String>> launcherVersions = new MavenManifest(KettingConstants.KETTING_GROUP, ArtifactID).getDepVersions()
                 .stream()
                 .map(MajorMinorPatchVersion::parse)
                 .sorted()
@@ -206,7 +203,7 @@ public class KettingLauncher {
         }
 
         final MavenArtifact dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar"));
-        if (dep.downloadDependencyAndHash().renameTo(Main.LauncherJar)) {
+        if (dep.download().renameTo(Main.LauncherJar)) {
             System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
         }else{
             System.err.println("Something went wrong whilst replacing the Launcher Jar.");
@@ -245,7 +242,7 @@ public class KettingLauncher {
         
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
         if (args.enableServerUpdator() || needsDownload) {
-            final List<String> serverVersions = MavenArtifact.getDepVersions(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID);
+            final List<String> serverVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
             if (Main.DEBUG) {
                 System.out.println("Available Ketting versions");
@@ -280,9 +277,9 @@ public class KettingLauncher {
                         .parallel()
                         .forEach(element->{
                             try{
-                                if (element == serverBinPatchesArtifact && !serverBinPatchesArtifact.downloadDependencyAndHash().renameTo(KettingFiles.SERVER_LZMA))
+                                if (element == serverBinPatchesArtifact && !serverBinPatchesArtifact.download().renameTo(KettingFiles.SERVER_LZMA))
                                     System.err.println("An error occurred, whilst moving Server Binary Patches to it's correct location. There might be errors Patching!");
-                                else element.downloadDependencyAndHash();
+                                else element.download();
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -314,9 +311,8 @@ public class KettingLauncher {
                                 .map(Dependency::parse)
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
-                                .filter(dep->dep.maven().isPresent())
-                                .filter(dep-> MANUALLY_PATCHED_LIBS.stream().noneMatch(path -> dep.maven().get().getPath().startsWith(path)))
-                                .peek(dep-> builder.append(File.pathSeparator).append(new File(KettingFiles.LIBRARIES_DIR, dep.maven().get().getPath()).getAbsolutePath()))
+                                .filter(dep-> MANUALLY_PATCHED_LIBS.stream().noneMatch(path -> dep.getPath().startsWith(path)))
+                                .peek(dep-> builder.append(File.pathSeparator).append(Maven.getDependencyPath(dep.getPath()).toAbsolutePath()))
                                 .toList(), 
                         true
                 );
@@ -324,7 +320,9 @@ public class KettingLauncher {
             
             builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
             MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
-            libs.addLoadedLib(universalJarArtifact.getDependencyPath());
+            libs.addLoadedLib(Maven.getDependencyPath(universalJarArtifact.getPath()));
+            libs.addLoadedLib(KettingFileVersioned.FORGE_PATCHED_JAR);
+            libs.addLoadedLib(KettingFileVersioned.SERVER_JAR);
             
             System.setProperty("java.class.path", builder.toString());
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
