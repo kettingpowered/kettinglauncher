@@ -335,6 +335,7 @@ public class KettingLauncher {
         downloadMCP.join();
         if (Patcher.checkUpdateNeeded()) new Patcher();
 
+        JavaHacks.clearReservedIdentifiers();
         Arrays.stream(libs.getLoadedLibs())
                 .map(url-> {
                     try {
@@ -343,14 +344,13 @@ public class KettingLauncher {
                         throw new RuntimeException(e);
                     }
                 }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
-        
+        JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader());
         
         
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());
-        JavaHacks.clearReservedIdentifiers();
 
         Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader())
                 .getMethod("main", String[].class)
