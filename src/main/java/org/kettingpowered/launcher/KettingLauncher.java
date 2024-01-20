@@ -332,6 +332,8 @@ public class KettingLauncher {
             addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
             addToClassPath(KettingFileVersioned.SERVER_JAR);
         }
+        downloadMCP.join();
+        if (Patcher.checkUpdateNeeded()) new Patcher();
 
         Arrays.stream(libs.getLoadedLibs())
                 .map(url-> {
@@ -341,10 +343,8 @@ public class KettingLauncher {
                         throw new RuntimeException(e);
                     }
                 }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
-        downloadMCP.join();
         
         
-        if (Patcher.checkUpdateNeeded()) new Patcher();
         
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
