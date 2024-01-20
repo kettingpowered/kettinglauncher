@@ -33,10 +33,11 @@ public class Main {
     //This will only pull the INSTALLER_LIBRARIES_FOLDER from the compileTime KettingConstants version.
     public static final String INSTALLER_LIBRARIES_FOLDER = KettingConstants.INSTALLER_LIBRARIES_FOLDER;
     public static final MavenArtifact KETTINGCOMMON = new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcommon", "1.0.0", Optional.empty(), Optional.of("jar"));
-
+    static Instrumentation INST; 
 
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         if (DEBUG) System.out.println("[Agent] premain lib load start");
+        INST = inst;
         URL urlKettingCommon;
         List<Object> dependencyList;
 
@@ -71,7 +72,7 @@ public class Main {
                     .map(Optional::get)
                     .toList();
         }
-        Dependency kettingcommon = dependencyList.stream()
+        Dependency<?> kettingcommon = dependencyList.stream()
                 .filter(dep->{
                     try {
                         return dep.maven().equalsIgnoringVersion(Main.KETTINGCOMMON);
@@ -85,7 +86,7 @@ public class Main {
         return new Object[]{dependencyList, urlKettingCommon};
     }
 
-    @SuppressWarnings({"unused", "unchecked"})
+    @SuppressWarnings("unused")
     public static void agent_post_kettingcommon(List<Object> dependencyList, Instrumentation inst) {
         final Libraries libs = new Libraries();
         List<Dependency<MavenArtifact>> deps = dependencyList.stream()

@@ -1,15 +1,23 @@
 package org.kettingpowered.launcher.dependency;
 
+import org.kettingpowered.launcher.KettingLauncher;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class AvailableMavenRepos {
     public static final String SERVER_RELEASES = "https://nexus.c0d3m4513r.com/repository/Ketting-Server-Releases/";
-    public static final List<String> INSTANCE = List.of(
-            "https://nexus.c0d3m4513r.com/repository/Ketting/",
-            SERVER_RELEASES,
-            "https://nexus.c0d3m4513r.com/repository/Magma/",
-            "https://repo1.maven.org/maven2/",
-            "https://libraries.minecraft.net/",
-            "https://maven.minecraftforge.net/"
-    );
+    static {
+        List<String> instance = new ArrayList<>();
+        if (KettingLauncher.Bundled) instance.add("file://"+System.getProperty("user.home")+"/.m2/repository/");
+        instance.add("https://nexus.c0d3m4513r.com/repository/Ketting/");
+        instance.add(SERVER_RELEASES);
+        instance.add("https://nexus.c0d3m4513r.com/repository/Magma/");
+        instance.add("https://repo1.maven.org/maven2/");
+        instance.add("https://libraries.minecraft.net/");
+        instance.add("https://maven.minecraftforge.net/");
+        INSTANCE = Collections.unmodifiableList(instance);
+    }
+    public static final List<String> INSTANCE;
 }

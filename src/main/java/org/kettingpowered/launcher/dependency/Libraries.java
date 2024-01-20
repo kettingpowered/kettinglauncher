@@ -61,7 +61,7 @@ public class Libraries {
         }
         File depFile;
         try{
-            if (KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().equalsIgnoringVersion(artifact))) {
+            if (!KettingLauncher.Bundled && KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().equalsIgnoringVersion(artifact))) {
                 MavenArtifact artifact = dep.maven().getLatestMinorPatch();
                 if (Main.DEBUG) System.out.println("Using "+artifact+" instead of "+dep.maven());
                 if (!artifact.equals(dep.maven())) depFile = artifact.download();

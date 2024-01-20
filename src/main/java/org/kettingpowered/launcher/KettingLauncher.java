@@ -7,21 +7,20 @@ import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.utils.FileUtils;
-import org.kettingpowered.launcher.utils.JavaHacks;
+import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.kettingpowered.ketting.internal.MajorMinorPatchVersion.parseKettingServerVersionList;
 
 /**
  * @author C0D3 M4513R
@@ -128,7 +127,7 @@ public class KettingLauncher {
             final String fileName = prefix+"-"+version + ".jar";
             final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
             try {
-                extractJarContent(KettingFiles.DATA_DIR+fileName, file);
+                extractJarContent(KettingFiles.DATA_DIR+fileName, file, true);
             } catch (IOException e) {
                 failed=true;
                 exception.addSuppressed(e);
@@ -143,7 +142,7 @@ public class KettingLauncher {
             exception.addSuppressed(e);
         }
         try{
-            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"));
+            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"), true);
         } catch (IOException e) {
             failed=true;
             exception.addSuppressed(e);
@@ -164,6 +163,9 @@ public class KettingLauncher {
     }
 
     public static void extractJarContent(@NotNull String from, @NotNull File to) throws IOException {
+        extractJarContent(from, to, false);
+    }
+    public static void extractJarContent(@NotNull String from, @NotNull File to, boolean add_to_cp) throws IOException {
         try (InputStream internalFile = KettingLauncher.class.getClassLoader().getResourceAsStream(from)) {
             if (internalFile == null)
                 throw new IOException("Failed to extract file '" + from + "', file not found");
@@ -182,6 +184,7 @@ public class KettingLauncher {
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Failed to extract file '" + from + "', failed to get hash algorithm", e);
         }
+        if (add_to_cp) Main.INST.appendToSystemClassLoaderSearch(new JarFile(to));
     }
 
     private void updateLauncher() throws Exception {
@@ -227,7 +230,7 @@ public class KettingLauncher {
             System.out.println(KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
             System.out.println(Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
         }
-        final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
+        final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
         Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> serverVersion = null;
         
         if(versions.isEmpty()) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
@@ -243,7 +246,7 @@ public class KettingLauncher {
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
         if (args.enableServerUpdator() || needsDownload) {
             final List<String> serverVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
-            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
+            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
             if (Main.DEBUG) {
                 System.out.println("Available Ketting versions");
                 System.out.println(String.join("\n", serverVersions));
@@ -329,6 +332,15 @@ public class KettingLauncher {
             addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
             addToClassPath(KettingFileVersioned.SERVER_JAR);
         }
+
+        Arrays.stream(libs.getLoadedLibs())
+                .map(url-> {
+                    try {
+                        return new JarFile(new File(url.toURI()));
+                    } catch (IOException | URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
         downloadMCP.join();
         
         
@@ -338,21 +350,11 @@ public class KettingLauncher {
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());
+        JavaHacks.clearReservedIdentifiers();
 
-        ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
-        try (URLClassLoader loader = new LibraryClassLoader(libs.getLoadedLibs())) {
-            Thread.currentThread().setContextClassLoader(loader);
-            JavaHacks.loadExternalFileSystems(loader);
-            JavaHacks.clearReservedIdentifiers();
-
-            Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, loader)
-                    .getMethod("main", String[].class)
-                    .invoke(null, (Object) arg_list.toArray(String[]::new));
-        } catch (Throwable t) {
-            throw new RuntimeException("Could not launch server", t);
-        } finally{
-            Thread.currentThread().setContextClassLoader(oldCL);
-        }
+        Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader())
+                .getMethod("main", String[].class)
+                .invoke(null, (Object) arg_list.toArray(String[]::new));
     }
 
     private void addToClassPath(File file) {
