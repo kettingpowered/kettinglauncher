@@ -189,13 +189,14 @@ public class KettingLauncher {
 
     private void updateLauncher() throws Exception {
         if ("dep-env".equals(Version)) return;
-        final List<MajorMinorPatchVersion<String>> launcherVersions = new MavenManifest(KettingConstants.KETTING_GROUP, ArtifactID).getDepVersions()
+        final List<MajorMinorPatchVersion<Integer>> launcherVersions = new MavenManifest(KettingConstants.KETTING_GROUP, ArtifactID).getDepVersions()
                 .stream()
                 .map(MajorMinorPatchVersion::parse)
+                .map(mmp->mmp.convertMMP(Integer::parseInt))
                 .sorted()
                 .toList();
         if(Main.DEBUG) System.out.println(launcherVersions.stream().map(MajorMinorPatchVersion::toString).collect(Collectors.joining("\n")));
-        MajorMinorPatchVersion<String> version = MajorMinorPatchVersion.parse(Version);
+        MajorMinorPatchVersion<Integer> version = MajorMinorPatchVersion.parse(Version).convertMMP(Integer::parseInt);
         final int index = launcherVersions.indexOf(version);
         if (index<0) {
             System.err.println("Using unrecognised Launcher version.");
