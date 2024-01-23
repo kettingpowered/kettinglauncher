@@ -116,8 +116,8 @@ public class KettingLauncher {
 
         if (!Bundled && args.enableLauncherUpdator()) updateLauncher(); //it makes very little difference where this is. This will only be applied on the next reboot anyway.
 
-        if(!ui.checkEula(eula)) System.exit(0);
-        
+        if (!args.installOnly())
+            if(!ui.checkEula(eula)) System.exit(0);
     }
 
     private static void extractBundledContent() throws Exception {
