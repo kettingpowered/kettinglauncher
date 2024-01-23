@@ -371,16 +371,7 @@ public class KettingLauncher {
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());
 
-        String clazz = Stream.of("net.minecraftforge.bootstrap.ForgeBootstrap", "cpw.mods.bootstraplauncher.BootstrapLauncher").filter((className) -> {
-            try {
-                Class.forName(className);
-                return true;
-            } catch (ClassNotFoundException e) {
-                return false;
-            }
-        }).toList().get(0);
-
-        Class.forName(clazz, true, KettingLauncher.class.getClassLoader())
+        Class.forName(Bundled_McVersion.equals("1.20.1") ? "cpw.mods.bootstraplauncher.BootstrapLauncher" : "net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader())
                 .getMethod("main", String[].class)
                 .invoke(null, (Object) arg_list.toArray(String[]::new));
     }
