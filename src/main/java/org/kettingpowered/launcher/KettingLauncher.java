@@ -1,6 +1,8 @@
 package org.kettingpowered.launcher;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
@@ -28,9 +30,9 @@ import java.util.stream.Stream;
 public class KettingLauncher {
     public static final String Version = (KettingLauncher.class.getPackage().getImplementationVersion() != null) ? KettingLauncher.class.getPackage().getImplementationVersion() : "dev-env";
     public static final boolean Bundled;
-    public static final String Bundled_McVersion;
-    public static final String Bundled_ForgeVersion;
-    public static final String Bundled_KettingVersion;
+    @Nullable private static final String Bundled_McVersion;
+    @Nullable private static final String Bundled_ForgeVersion;
+    @Nullable private static final String Bundled_KettingVersion;
 
     static {
         String Bundled_KettingVersion1 = null;
@@ -65,14 +67,14 @@ public class KettingLauncher {
     }
 
     public static final String ArtifactID = "kettinglauncher";
-    public static final int BufferSize = 1024*1024*32;
+    @ApiStatus.Internal public static final int BufferSize = 1024*1024*32;
 
     //Libs added here will get ignored by lib (down-)loading and will also not get added to java.class.path  
-    public static final List<String> MANUALLY_PATCHED_LIBS = List.of(
+    @ApiStatus.Internal public static final List<String> MANUALLY_PATCHED_LIBS = List.of(
             "com/mojang/brigadier"
     );
 
-    public static final List<MavenArtifact> AUTO_UPDATE_LIBS = List.of(
+    @ApiStatus.Internal public static final List<MavenArtifact> AUTO_UPDATE_LIBS = List.of(
         Main.KETTINGCOMMON,
         new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcore", "1.0.0", Optional.empty(), Optional.of("jar")), 
         new MavenArtifact(KettingConstants.KETTING_GROUP, "terminal-colors", "1.0.0", Optional.empty(), Optional.of("jar"))
@@ -189,6 +191,7 @@ public class KettingLauncher {
 
     private void updateLauncher() throws Exception {
         if ("dev-env".equals(Version)) return;
+        //get a list of available launcher versions
         final List<MajorMinorPatchVersion<Integer>> launcherVersions = new MavenManifest(KettingConstants.KETTING_GROUP, ArtifactID).getDepVersions()
                 .stream()
                 .map(MajorMinorPatchVersion::parse)
@@ -201,11 +204,13 @@ public class KettingLauncher {
         if (index<0) {
             System.err.println("Using unrecognised Launcher version.");
         }
+        //if we are the latest version, then no need to do anything
         else if (index==launcherVersions.size()-1) {
             System.out.println("Already on newest Launcher version. Nothing to do.");
             return;
         }
-
+        
+        //else update the launcher jar. We cannot (and shouldn't) apply the update. It will be done on the next server boot.
         final MavenArtifact dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar"));
         if (dep.download().renameTo(Main.LauncherJar)) {
             System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
@@ -220,31 +225,39 @@ public class KettingLauncher {
     }
     
     private void ensureOneServerAndUpdate(final String mc_version) throws Exception {
-        File[] kettingServerVersions = Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]);
-        MajorMinorPatchVersion<Integer> mc_mmp;
+        //Parse the given minecraft version 
+        final MajorMinorPatchVersion<Integer> mc_mmp;
         {
             MajorMinorPatchVersion<String> mc_mmp_str = MajorMinorPatchVersion.parse(mc_version);
             mc_mmp = new MajorMinorPatchVersion<>(Integer.parseInt(mc_mmp_str.major()), Integer.parseInt(mc_mmp_str.minor()), Integer.parseInt(mc_mmp_str.patch()), mc_mmp_str.other());
         }
-
-        if (Main.DEBUG) {
-            System.out.println(KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
-            System.out.println(Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
-        }
-        final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
         Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> serverVersion = null;
-        
-        if(versions.isEmpty()) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
-        else if(versions.size() > 1) {
-            serverVersion = versions.get(0);
-            Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = serverVersion;
-            deleteOtherVersions(String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2()));
-        }else{
-            serverVersion = versions.get(0);
+        final boolean needsDownload;
+        //Get the latest Ketting server version for the minecraft version that exists in the KETTINGSERVER_FORGE_DIR and delete the rest. 
+        {
+            File[] kettingServerVersions = Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]);
+    
+            if (Main.DEBUG) {
+                System.out.println(KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
+                System.out.println(Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
+            }
+            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
+            
+            if(versions.isEmpty()) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
+            else if(versions.size() > 1) {
+                serverVersion = versions.get(0);
+                Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = serverVersion;
+                deleteOtherVersions(String.format("%s-%s-%s", mc_mmp, version.t1(), version.t2()));
+            }else{
+                serverVersion = versions.get(0);
+            }
+            needsDownload = versions.isEmpty();
         }
-        final boolean needsDownload = versions.isEmpty();
         
+        //if we don't have a ketting server version for the given minecraft version or there is a new ketting server version for the given minecraft version and server updates are enabled:
+        // download the newest version and launch that. 
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
+        // get the newest version
         if (args.enableServerUpdator() || needsDownload) {
             final List<String> serverVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
@@ -258,6 +271,7 @@ public class KettingLauncher {
             }
             serverVersion = parsedServerVersions.get(0);
         }
+        //and download it
         if (args.enableServerUpdator() || needsDownload) {
             final String mc_minecraft_forge = String.format("%s-%s-%s", mc_mmp, serverVersion.t1(), serverVersion.t2());
             final File forgeDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR,mc_minecraft_forge);
@@ -295,8 +309,7 @@ public class KettingLauncher {
         }
     }
 
-    void launch() throws Exception {
-        Libraries libs = new Libraries();
+    void prepareLaunch() throws Exception {
         Thread downloadMCP = new Thread(()-> {
             try {
                 Libraries.downloadMcp();
@@ -351,7 +364,8 @@ public class KettingLauncher {
             System.out.println("Server has been installed.");
             System.exit(0);
         }
-        
+    }
+    void launch() throws Exception {
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");

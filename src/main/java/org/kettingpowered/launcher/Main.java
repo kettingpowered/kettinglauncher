@@ -148,6 +148,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         final KettingLauncher launcher = new KettingLauncher(args);
         launcher.init();
+        launcher.prepareLaunch();
         launcher.launch();
     }
 }
