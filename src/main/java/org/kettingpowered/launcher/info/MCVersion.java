@@ -1,16 +1,13 @@
 package org.kettingpowered.launcher.info;
 
+import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
 import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.ParsedArgs;
 import org.kettingpowered.launcher.utils.FileUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -28,6 +25,21 @@ public class MCVersion {
     private static String mc;
     public static String getMc(ParsedArgs args){
         if (mc != null) return mc;
+
+        //Check for a mcversion.txt file, this has priority
+        {
+            File mcversion = new File(KettingFiles.MAIN_FOLDER_FILE, "mcversion.txt");
+            if (mcversion.exists()){
+                try {
+                    String version = readFromIS(new FileInputStream(mcversion));
+                    if (version != null) {
+                        mc = version;
+                        return mc;
+                    }
+                } catch (FileNotFoundException ignored) {} //File is known to exist, so this should never happen.
+            }
+        }
+
         //If you want to manually specify the version
         //via args
         if (args.minecraftVersion() != null) {
@@ -55,12 +67,10 @@ public class MCVersion {
         //Get the last saved mc version
         {
             final InputStream mcv = MCVersion.class.getResourceAsStream("/minecraftVersion");
-            if (mcv != null){
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(mcv))){
-                    mc = reader.readLine().trim();
-                    return mc;
-                } catch (IOException ignored) {
-                }
+            String version = readFromIS(mcv);
+            if (version != null) {
+                mc = version;
+                return mc;
             }
         }
         //Get the version via mcp mappings, since they are not wiped.
@@ -89,5 +99,14 @@ public class MCVersion {
                  - the environment variable 'kettinglauncher_minecraftVersion' E.g. ' kettinglauncher_minecraftVersion=1.20.4 ' before the java executable.""");
         System.exit(1);
         throw new RuntimeException();//bogus, but has to be there to stop the compiler from complaining, that there is no return value here.
+    }
+
+    private static String readFromIS(@Nullable InputStream versionStream) {
+        if (versionStream == null) return null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(versionStream))){
+            return reader.readLine().trim();
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 }
