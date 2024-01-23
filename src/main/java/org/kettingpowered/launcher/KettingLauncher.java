@@ -347,6 +347,10 @@ public class KettingLauncher {
                 }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
         JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader());
         
+        if (args.installOnly()) {
+            System.out.println("Server has been installed.");
+            System.exit(0);
+        }
         
         System.out.println("Launching Ketting...");
         final List<String> arg_list = new ArrayList<>(args.args());

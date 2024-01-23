@@ -38,13 +38,16 @@ public class Args {
         if (containsArg("-accepteula"))
             BetterUI.forceAcceptEULA(eula);
 
+        boolean installOnly = containsArg("-installOnly");
         boolean dau = containsArg("-dau");
         boolean daus = containsArg("-daus");
         boolean enableServerUpdate = !(dau||daus);
         boolean enableLauncherUpdate = !containsArg("-daul") && !"dev-env".equals(KettingLauncher.Version);
         @NotNull String target = Objects.requireNonNullElse(getArg("--launchTarget"), "forge_server");
-        @Nullable String minecraftVersion = getArg("--minecraftVersion");
-        return new ParsedArgs(Collections.unmodifiableList(args), enableServerUpdate, enableLauncherUpdate, target, minecraftVersion);
+        @Nullable String minecraftVersion = getArg("-minecraftVersion");
+        //backward compatibility
+        if (minecraftVersion == null) minecraftVersion = getArg("-minecraftVersion");
+        return new ParsedArgs(Collections.unmodifiableList(args), installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion);
     }
     
     private static void printHelp(){
@@ -58,8 +61,11 @@ public class Args {
         System.out.println("  -accepteula         Accepts the EULA automatically");
         System.out.println("  -dau or -daus       Disables automatic server updates");
         System.out.println("  -daul               Disables automatic launcher updates");
-        System.out.println("  --launchTarget      Sets the default launchTarget. Exists mostly for debug purposes.");
-        System.out.println("  --minecraftVersion  Sets the Minecraft Version of the Server. Will update the server to this version, if a Ketting version on another Minecraft Version is used.");
+        System.out.println("  -installOnly        Stop the launcher, after the server has been installed.");
+        System.out.println("  -minecraftVersion   Sets the Minecraft Version of the Server. Will update the server to this version, if a Ketting version on another Minecraft Version is used.");
+        System.out.println("  --minecraftVersion  See above, except it's depracticed. Swap to the one above, for the exact same effect.");
+        System.out.println("Development|Unstable Options:");
+        System.out.println("  --launchTarget      Sets the default launchTarget. Exists mostly for debug purposes for forge. We reserve the right to ignore this (e.g. if it's unsupported by the target server version )");
     }
 
     private @Nullable String getArg(String arg) {
@@ -82,6 +88,7 @@ public class Args {
         }
         arg = arg.replace("-","");
         if (System.getenv("kettinglauncher_" + arg) != null) return true;
+        //noinspection RedundantIfStatement
         if (System.getProperty("kettinglauncher."  + arg) != null) return true;
         return false;
     }

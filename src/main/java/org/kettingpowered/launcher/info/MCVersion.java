@@ -14,9 +14,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 /**
  * @author C0D3 M4513R
@@ -94,9 +91,11 @@ public class MCVersion {
         //and now we are out of options.
         System.err.println("""
                 Could not determine the active server minecraft version. Please specify it, by specifying one of the following:
+                 - creating a file named 'mcversion.txt' with the desired minecraft version (e.g. 1.20.4).
                  - the '--minecraftVersion' argument. E.g.: add ' --minecraftVersion 1.20.4 ' after the '-jar' argument
                  - the java property 'kettinglauncher.minecraftVersion' E.g.: ' -Dkettinglauncher.minecraftVersion=1.20.4 ' before the '-jar' argument
-                 - the environment variable 'kettinglauncher_minecraftVersion' E.g. ' kettinglauncher_minecraftVersion=1.20.4 ' before the java executable.""");
+                 - the environment variable 'kettinglauncher_minecraftVersion' E.g. ' kettinglauncher_minecraftVersion=1.20.4 ' before the java executable.
+                 """);
         System.exit(1);
         throw new RuntimeException();//bogus, but has to be there to stop the compiler from complaining, that there is no return value here.
     }
