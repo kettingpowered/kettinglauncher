@@ -57,7 +57,7 @@ These arguments are subject to change, and may not work in future versions. For 
 |---------------------------|-----------------------------------------------------------------------------------------|
 | `--launchTarget <target>` | Sets the forge launch target, this should not be used unless you know what you're doing |
 
-### What if my I / my hosting provider does not allow me to use arguments?
+### What if my I don't know how / my hosting provider does not allow me to use arguments?
 
 You can create a file called `mcversion.txt` in the same directory as the jar, and put the Minecraft version in there. This will be used as the Minecraft version and will take priority over the `-minecraftVersion` argument.
 
