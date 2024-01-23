@@ -1,7 +1,7 @@
 [discord-widget]: https://canary.discord.com/api/guilds/1172551819138965605/widget.png
 [discord-invite]: https://discord.kettingpowered.org/
 
-[build-status]: https://img.shields.io/github/actions/workflow/status/kettingpowered/Ketting-1-20-x/build_and_release.yml
+[build-status]: https://img.shields.io/github/actions/workflow/status/kettingpowered/kettinglauncher/gradle-publish.yml
 [build-link]: https://github.com/kettingpowered/kettinglauncher/actions
 
 [latest-release]: https://img.shields.io/github/v/release/kettingpowered/kettinglauncher
