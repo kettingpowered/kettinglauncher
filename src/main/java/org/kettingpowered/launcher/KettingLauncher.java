@@ -188,7 +188,7 @@ public class KettingLauncher {
     }
 
     private void updateLauncher() throws Exception {
-        if ("dep-env".equals(Version)) return;
+        if ("dev-env".equals(Version)) return;
         final List<MajorMinorPatchVersion<Integer>> launcherVersions = new MavenManifest(KettingConstants.KETTING_GROUP, ArtifactID).getDepVersions()
                 .stream()
                 .map(MajorMinorPatchVersion::parse)
