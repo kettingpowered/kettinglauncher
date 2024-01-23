@@ -53,9 +53,9 @@ These arguments are subject to change, and may not work in future versions. For 
 | `-installOnly`                  | Only installs the server and exits after                                                |
 | `-minecraftVersion <version>`   | Sets the Minecraft version to use (if Ketting supports it)                              |
 
-| Unstable options: |                                                                                         |
-|-------------------|-----------------------------------------------------------------------------------------|
-| `--launchTarget`  | Sets the forge launch target, this should not be used unless you know what you're doing |
+| Unstable arguments:       | Description                                                                             |
+|---------------------------|-----------------------------------------------------------------------------------------|
+| `--launchTarget <target>` | Sets the forge launch target, this should not be used unless you know what you're doing |
 
 ### What if my I / my hosting provider does not allow me to use arguments?
 
