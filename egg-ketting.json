@@ -1,0 +1,52 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2024-01-23T21:14:25+01:00",
+    "name": "Ketting",
+    "author": "justred23@kettingpowered.org",
+    "description": null,
+    "features": null,
+    "docker_images": {
+        "ghcr.io\/pterodactyl\/yolks:java_17": "ghcr.io\/pterodactyl\/yolks:java_17"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}} -minecraftVersion {{MC_VERSION}}",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \")! For help, type \"\r\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# Ketting Installation Script (based on Forge)\r\n#\r\n# Server Files: \/mnt\/server\r\napt update\r\napt install -y curl jq\r\n\r\nif [[ ! -d \/mnt\/server ]]; then\r\n  mkdir \/mnt\/server\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\nMC_VERSION=\"$(echo \"$MC_VERSION\" | tr -d ' ')\"\r\nDOWNLOAD_LINK=\"$(curl -s https:\/\/api.github.com\/repos\/kettingpowered\/kettinglauncher\/releases\/latest | jq -r '.assets[] | select(.name | contains(\"sources.jar\") | not) | .browser_download_url')\"\r\n\r\n#Adding .jar when not ending by SERVER_JARFILE\r\nif [[ ! $SERVER_JARFILE = *\\.jar ]]; then\r\n  SERVER_JARFILE=\"$SERVER_JARFILE.jar\"\r\nfi\r\n\r\necho \"trying ${DOWNLOAD_LINK}\"\r\n\r\nif curl --output \/dev\/null --silent --head --fail ${DOWNLOAD_LINK}; then\r\n  echo -e \"installer jar download link is valid.\"\r\nelse\r\n  echo -e \"link is invalid. Exiting now\"\r\n  exit 2\r\nfi\r\n\r\ncurl -s -o ${SERVER_JARFILE} -sSL ${DOWNLOAD_LINK}\r\n\r\n#Checking if downloaded jars exist\r\nif [[ ! -f .\/${SERVER_JARFILE} ]]; then\r\n  echo \"!!! Error downloading ketting !!!\"\r\n  exit\r\nfi\r\n\r\n# Delete args to support upgrading\r\nrm -rf libraries\/net\/minecraftforge\/forge\r\n\r\n#Installing server\r\necho -e \"Installing Ketting server.\\n\"\r\njava -jar ${SERVER_JARFILE} -installOnly -minecraftVersion ${MC_VERSION} || { echo -e \"\\nInstall failed.\\nShould you be using unlimited memory value of 0, make sure to increase the default install resource limits in the Wings config or specify exact allocated memory in the server Build Configuration instead of 0! \\nOtherwise, the Ketting installer will not have enough memory.\"; exit 4; }\r\n\r\necho -e \"Installation process is completed\"",
+            "container": "eclipse-temurin:17",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Launcher jar name",
+            "description": "The name of the launcher jar",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "launcher.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:\/^([\\w\\d._-]+)(\\.jar)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Minecraft Version",
+            "description": "The Minecraft version that is supported by Ketting",
+            "env_variable": "MC_VERSION",
+            "default_value": "1.20.4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}
