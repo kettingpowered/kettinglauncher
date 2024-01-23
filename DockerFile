@@ -1,0 +1,15 @@
+FROM eclipse-temurin:17
+
+ARG MINECRAFT_VERSION=1.20.4
+
+ENV MINECRAFT_VERSION=${MINECRAFT_VERSION}
+
+WORKDIR /app
+
+# Fetch the latest release information and download the second JAR file from the assets
+RUN apt-get update && apt-get install -y curl jq \
+    && filename=$(curl -s https://api.github.com/repos/kettingpowered/kettinglauncher/releases/latest | jq -r '.assets[] | select(.name | contains("sources.jar") | not) | .browser_download_url') \
+    && echo "Downloading ${filename}" \
+    && curl -L ${filename} -o launcher.jar
+
+ENTRYPOINT ["java", "-jar", "/app/launcher.jar"]
