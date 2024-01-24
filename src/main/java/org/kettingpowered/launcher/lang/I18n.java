@@ -59,14 +59,14 @@ public class I18n {
     public static String get(@NotNull String key) {
         String translation = translations.get(key);
         if (translation == null) {
-            System.err.println("Missing translation for " + key);
-
-            if (fallback.isEmpty())
+            if (fallback.isEmpty()) {
+                System.err.println("Missing translation for " + key);
                 return key;
+            }
 
             translation = fallback.get(key);
             if (translation == null) {
-                System.err.println("Missing fallback translation for " + key);
+                System.err.println("Missing translation for " + key);
                 return key;
             }
 
