@@ -2,6 +2,8 @@ package org.kettingpowered.launcher.internal.utils;
 
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.launcher.lang.I18n;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,7 +71,7 @@ public class NetworkUtils {
         if(expectedHash != null && !hash.equals(expectedHash.toLowerCase())) {
             //noinspection ResultOfMethodCallIgnored
             f.delete();
-            throw new Exception(hashFormat+" hash of downloaded file does not match expected value!\n Got: "+hash+"\n But expected: "+expectedHash);
+            throw new Exception(I18n.get("error.network_utils.hash_mismatch", hashFormat, expectedHash, hash));
         }
     }
 

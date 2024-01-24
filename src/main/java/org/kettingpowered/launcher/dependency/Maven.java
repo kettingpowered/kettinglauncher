@@ -6,6 +6,7 @@ import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
+import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.*;
 import java.net.URLConnection;
@@ -13,8 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 
 public final class Maven {
@@ -59,23 +58,23 @@ public final class Maven {
         
         if (dependencyFile.exists()) {
             if (hash == null) {
-                if (!dependencyFile.delete()) System.err.println("Something went wrong whilst deleting Dependency " + info);
-                if (Main.DEBUG) System.out.println("Redownloading dep: "+info+" , because of an empty hash.");
+                if (!dependencyFile.delete()) I18n.logError("error.maven.failed_to_delete_dep", info);
+                if (Main.DEBUG) I18n.log("debug.maven.re_downloading.empty_hash", info);
                 return true;
             }
 
             String fileHash = HashUtils.getHash(dependencyFile, hash.algorithm());
             if (fileHash.equals(hash.hash())) {
-                if (Main.DEBUG) System.out.println("Dep Cached: "+info);
+                if (Main.DEBUG) I18n.log("debug.maven.dep_hash_match", info);
                 // This dependency is already downloaded & the hash matches
                 return false;
             } else {
-                if (Main.DEBUG) System.out.println("Dep Hash-Mismatch. expected:" + hash + ", but got: " + fileHash + " redownloading: "+info);
-                if (!dependencyFile.delete()) System.err.println("Something went wrong whilst deleting Dependency " + info);
+                if (Main.DEBUG) I18n.log("debug.maven.re_downloading.hash_mismatch", info, hash, fileHash);
+                if (!dependencyFile.delete()) I18n.logError("error.maven.failed_to_delete_dep", info);
                 return true;
             }
         }
-        if(Main.DEBUG) System.out.println("Dependency File does not exist: "+dependencyFile.getAbsolutePath());
+        if(Main.DEBUG) I18n.log("debug.maven.dep_not_found", dependencyFile.getAbsolutePath());
         return true;
     }
 
@@ -90,8 +89,8 @@ public final class Maven {
         //noinspection ResultOfMethodCallIgnored
         dependencyFile.createNewFile();
 
-        RuntimeException failure = new RuntimeException("All provided repositories failed to download dependency");
-        if (Main.DEBUG) System.out.println("Downloading: "+maven);
+        RuntimeException failure = new RuntimeException(I18n.get("error.maven.all_repos_failed"));
+        if (Main.DEBUG) I18n.log("debug.maven.downloading_dep", maven);
         boolean anyFailures = false;
         for (String repository : AvailableMavenRepos.INSTANCE) {
             try {
@@ -102,13 +101,13 @@ public final class Maven {
                 //we don't check the hash, if we were not passed one.
                 //this is useful for downloading hashes itself
                 if (gothash != null && !hash.hash().equals(gothash)) {
-                    final String errorMessage = "Failed to verify file hash of Maven Artifact: " +maven+ "\nGot:      " + gothash + "\nExpected: " + hash.hash();
+                    final String errorMessage = I18n.get("error.maven.hash_mismatch", maven, gothash, hash.hash());
                     if (ignoreHashError) System.err.println(errorMessage);
                     else throw new RuntimeException(errorMessage);
                 }
 
                 // Success
-                if (Main.DEBUG) System.out.println("Downloaded '" + maven + "' from "+repository);
+                if (Main.DEBUG) I18n.log("debug.maven.downloaded_dep", maven, repository);
                 return dependencyFile;
             } catch (Throwable e) {
                 //noinspection ResultOfMethodCallIgnored
@@ -118,7 +117,7 @@ public final class Maven {
             }
         }
         if (!anyFailures) {
-            throw new RuntimeException("Nothing failed yet nothing passed");
+            throw new RuntimeException(I18n.get("error.maven.unknown_error"));
         }
         throw failure;
     }

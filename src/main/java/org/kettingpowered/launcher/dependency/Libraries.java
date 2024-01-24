@@ -7,6 +7,7 @@ import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.betterui.BetterUI;
+import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -56,14 +57,14 @@ public class Libraries {
     
     private File downloadDep(Dependency<MavenArtifact> dep) {
         if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().group())) {
-            if (Main.DEBUG) System.out.println("Skipping download of "+dep+", since it should be bundled.");
+            if (Main.DEBUG) I18n.log("info.libraries.skip_bundled", dep);
             return Maven.getDependencyPath(dep.maven().getPath()).toFile().getAbsoluteFile();
         }
         File depFile;
         try{
             if (!KettingLauncher.Bundled && KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().equalsIgnoringVersion(artifact))) {
                 MavenArtifact artifact = dep.maven().getLatestMinorPatch();
-                if (Main.DEBUG) System.out.println("Using "+artifact+" instead of "+dep.maven());
+                if (Main.DEBUG) I18n.log("info.libraries.using_different", artifact, dep.maven());
                 if (!artifact.equals(dep.maven())) depFile = artifact.download();
                 else depFile = dep.download();
             }else {
@@ -98,7 +99,7 @@ public class Libraries {
     
     public URL[] getLoadedLibs() {
         if (loadedLibs.stream().anyMatch(Objects::isNull)) {
-            System.err.println("Failed to load libraries, please try again");
+            I18n.logError("error.libraries.failed_to_load");
             System.exit(1);
         }
 

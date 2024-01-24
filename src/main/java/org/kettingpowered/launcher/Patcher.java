@@ -13,6 +13,7 @@ import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
+import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.utils.Processors;
 
 import java.io.BufferedReader;
@@ -50,7 +51,7 @@ public class Patcher {
 
         final String manifest = NetworkUtils.readFile("https://launchermeta.mojang.com/mc/game/version_manifest.json");
         if (manifest == null) {
-            System.err.println("Failed to download version_manifest.json");
+            I18n.logError("error.patcher.no_version_manifest");
             System.exit(1);
         }
 
@@ -66,13 +67,13 @@ public class Patcher {
         }
 
         if (currentRelease == null) {
-            System.err.println("Failed to find release for version " + KettingConstants.MINECRAFT_VERSION);
+            I18n.logError("error.patcher.no_release", KettingConstants.MINECRAFT_VERSION);
             System.exit(1);
         }
 
         final String releaseManifest = NetworkUtils.readFile(currentRelease.get("url").getAsString());
         if (releaseManifest == null) {
-            System.err.println("Failed to download release manifest");
+            I18n.logError("error.patcher.no_release_manifest");
             System.exit(1);
         }
 
@@ -86,7 +87,7 @@ public class Patcher {
         try {
             NetworkUtils.downloadFile(serverUrl, serverJar, serverHash, "sha1");
         } catch (Exception e) {
-            throw new IOException("Failed to download server jar", e);
+            throw new IOException(I18n.get("error.patcher.failed_download"), e);
         }
     }
 
@@ -103,7 +104,7 @@ public class Patcher {
     
             processors.remove(0); //Remove the extracting processor, we'll handle that ourselves
         }catch (IOException exception){
-            System.err.println("Failed to load/read installscript.json");
+            I18n.logError("error.patcher.failed_read_install_script");
             System.exit(1);
         }
     }
@@ -183,7 +184,7 @@ public class Patcher {
                     progressBar.step();
                 } catch (IOException e) {
                     unmute();
-                    throw new RuntimeException("A processor ran into an error", e);
+                    throw new RuntimeException(I18n.get("error.patcher.processor_fault"), e);
                 }
             });
         }

@@ -2,6 +2,7 @@ package org.kettingpowered.launcher;
 
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.dependency.*;
+import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,6 +38,10 @@ public class Main {
 
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         if (DEBUG) System.out.println("[Agent] premain lib load start");
+
+        //Load language files
+        I18n.load();
+
         INST = inst;
         URL urlKettingCommon;
         List<Object> dependencyList;
@@ -63,6 +68,9 @@ public class Main {
     
     @SuppressWarnings("unused")
     public static Object[] agent_pre_kettingcommon() throws Exception{
+        //Damn classloaders
+        I18n.load(true);
+
         List<Dependency<MavenArtifact>> dependencyList;
         //Download all needed libs for the Launcher itself
         try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
@@ -88,6 +96,9 @@ public class Main {
 
     @SuppressWarnings("unused")
     public static void agent_post_kettingcommon(List<Object> dependencyList, Instrumentation inst) {
+        //Damn classloaders
+        I18n.load(true);
+
         final Libraries libs = new Libraries();
         List<Dependency<MavenArtifact>> deps = dependencyList.stream()
                 .map(obj->{

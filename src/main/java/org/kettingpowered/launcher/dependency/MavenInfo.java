@@ -1,6 +1,7 @@
 package org.kettingpowered.launcher.dependency;
 
 import org.kettingpowered.launcher.Main;
+import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -14,11 +15,11 @@ public interface MavenInfo {
     File download() throws Exception;
     Dependency<? extends MavenInfo> downloadDependencyHash() throws Exception;
     static <T extends MavenInfo> Dependency<T> downloadDependencyHash(T mavenInfo) throws Exception{
-        if (Main.DEBUG) System.out.println("Downloading hash for: "+ mavenInfo);
+        if (Main.DEBUG) I18n.log("debug.maven.downloading_hash", mavenInfo);
         Hash deps = null;
         Path path = Objects.requireNonNull(mavenInfo.getPath().getParent());
         String fileName = mavenInfo.getFileNameWithExtenstion();
-        Exception exception = new Exception("Failed to download any hash");
+        Exception exception = new Exception(I18n.get("error.maven.no_hash", mavenInfo));
         for (String hashAlgorithm:Maven.hashAlgorithms){
             try{
                 String hashExt = Maven.hashAlgoToExt(hashAlgorithm);
@@ -40,7 +41,7 @@ public interface MavenInfo {
             }
         }
         if (deps==null) throw exception;
-        if (Main.DEBUG) System.out.println("Downloaded  hash for: "+ mavenInfo);
+        if (Main.DEBUG) I18n.log("debug.maven.downloaded_hash", mavenInfo);
         return new Dependency<>(deps, mavenInfo);
     }
 }

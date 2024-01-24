@@ -1,6 +1,7 @@
 package org.kettingpowered.launcher.dependency;
 
 import org.kettingpowered.launcher.Main;
+import org.kettingpowered.launcher.lang.I18n;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -19,7 +20,7 @@ implements MavenInfo {
         final List<String> list = new ArrayList<>();
 
         final NodeList versions = doc.getElementsByTagName("version");
-        if (versions.getLength() < 1) throw new Exception("Maven Metadata contains no 'versions' Tag");
+        if (versions.getLength() < 1) throw new Exception(I18n.get("error.maven.no_versions"));
         int i = 0;
         while(i < versions.getLength()) {
             list.add(versions.item(i).getFirstChild().getNodeValue());

@@ -1,5 +1,7 @@
 package org.kettingpowered.launcher.utils;
 
+import org.kettingpowered.launcher.lang.I18n;
+
 import java.io.IOException;
 
 public final class Processors {
@@ -21,7 +23,7 @@ public final class Processors {
                 net.minecraftforge.fart.Main.main(args);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown processor: " + processor);
+                throw new IllegalArgumentException(I18n.get("error.processor.unknown_processor", processor));
         }
     }
 }

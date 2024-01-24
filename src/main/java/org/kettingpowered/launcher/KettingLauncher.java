@@ -8,6 +8,7 @@ import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
+import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.utils.FileUtils;
 import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 
@@ -61,9 +62,7 @@ public class KettingLauncher {
         Bundled_ForgeVersion = Bundled_ForgeVersion1;
         Bundled_McVersion = Bundled_McVersion1;
         Bundled = Bundled1;
-        if (Main.DEBUG && Bundled){
-            System.out.println("We are in a bundled Jar, with McVersion: "+Bundled_McVersion + " ForgeVersion: "+Bundled_ForgeVersion+" KettingVersion: "+Bundled_KettingVersion);
-        }
+        if (Main.DEBUG && Bundled) I18n.log("debug.bundled.extra", Bundled_McVersion, Bundled_ForgeVersion, Bundled_KettingVersion);
     }
 
     public static final String ArtifactID = "kettinglauncher";
@@ -100,7 +99,7 @@ public class KettingLauncher {
      */
     public void init() throws Exception {
         final String mc_version;
-        if (Main.DEBUG && Bundled) System.out.println("We are in a bundled jar. Read Version information from manifest.");
+        if (Main.DEBUG && Bundled) I18n.log("debug.bundled");
 
         //Cache ketting versions
         final List<String> depVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
@@ -120,7 +119,7 @@ public class KettingLauncher {
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues.
         if (Patcher.checkUpdateNeeded()) {
-            if (Main.DEBUG) System.out.println("Patcher needs updating.");
+            if (Main.DEBUG) I18n.log("debug.patcher.update");
             //prematurely delete files to prevent errors
             FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
             FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
@@ -138,7 +137,7 @@ public class KettingLauncher {
     }
 
     private static void extractBundledContent() throws Exception {
-        Exception exception = new Exception("Failed to extract some of the Bundled Jar content");
+        Exception exception = new Exception(I18n.get("error.launcher.bundle_extract_failed"));
         boolean failed = false;
         final String version = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
         deleteOtherVersions(version);
@@ -187,7 +186,7 @@ public class KettingLauncher {
     public static void extractJarContent(@NotNull String from, @NotNull File to, boolean add_to_cp) throws IOException {
         try (InputStream internalFile = KettingLauncher.class.getClassLoader().getResourceAsStream(from)) {
             if (internalFile == null)
-                throw new IOException("Failed to extract file '" + from + "', file not found");
+                throw new IOException(I18n.get("error.launcher.bundled_file_not_found", from));
 
             byte[] internalFileContent = internalFile.readAllBytes();
             if (!to.exists() || !HashUtils.getHash(to, "SHA3-512").equals(HashUtils.getHash(new ByteArrayInputStream(internalFileContent), "SHA3-512"))) {
@@ -201,7 +200,7 @@ public class KettingLauncher {
                 }
             }
         } catch (NoSuchAlgorithmException e) {
-            throw new IOException("Failed to extract file '" + from + "', failed to get hash algorithm", e);
+            throw new IOException(I18n.get("error.launcher.hash_algorithm_not_found"), e);
         }
         if (add_to_cp) Main.INST.appendToSystemClassLoaderSearch(new JarFile(to));
     }
@@ -218,22 +217,18 @@ public class KettingLauncher {
         if(Main.DEBUG) System.out.println(launcherVersions.stream().map(MajorMinorPatchVersion::toString).collect(Collectors.joining("\n")));
         MajorMinorPatchVersion<Integer> version = MajorMinorPatchVersion.parse(Version).convertMMP(Integer::parseInt);
         final int index = launcherVersions.indexOf(version);
-        if (index<0) {
-            System.err.println("Using unrecognised Launcher version.");
-        }
+        if (index<0) I18n.logError("error.launcher.unrecognized_version");
         //if we are the latest version, then no need to do anything
         else if (index==launcherVersions.size()-1) {
-            System.out.println("Already on newest Launcher version. Nothing to do.");
+            I18n.log("info.launcher.up_to_date");
             return;
         }
         
         //else update the launcher jar. We cannot (and shouldn't) apply the update. It will be done on the next server boot.
         final MavenArtifact dep = new MavenArtifact(KettingConstants.KETTING_GROUP, ArtifactID, launcherVersions.get(launcherVersions.size()-1).toString(), Optional.empty(), Optional.of("jar"));
-        if (dep.download().renameTo(Main.LauncherJar)) {
-            System.err.println("Downloaded a Launcher update. A restart is required to apply the launcher update.");
-        }else{
-            System.err.println("Something went wrong whilst replacing the Launcher Jar.");
-        }
+
+        if (dep.download().renameTo(Main.LauncherJar)) I18n.log("info.launcher.updated");
+        else I18n.logError("error.launcher.update_failed");
     }
     private static void deleteOtherVersions(final String version){
         Arrays.stream(Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]))
@@ -273,16 +268,16 @@ public class KettingLauncher {
         
         //if we don't have a ketting server version for the given minecraft version or there is a new ketting server version for the given minecraft version and server updates are enabled:
         // download the newest version and launch that. 
-        if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
+        if (needsDownload) I18n.log("info.launcher.server_download", mc_version);
         // get the newest version
         if (args.enableServerUpdator() || needsDownload) {
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
             if (Main.DEBUG) {
-                System.out.println("Available Ketting versions");
+                I18n.log("debug.launcher.available_server_versions");
                 System.out.println(String.join("\n", serverVersions));
             }
             if (parsedServerVersions.isEmpty()) {
-                System.err.println("Found no Ketting version for the requested Minecraft Version: " + mc_version);
+                I18n.logError("error.launcher.no_server_version", mc_version);
                 System.exit(1);
             }
             serverVersion = parsedServerVersions.get(0);
@@ -312,7 +307,7 @@ public class KettingLauncher {
                         .forEach(element->{
                             try{
                                 if (element == serverBinPatchesArtifact && !serverBinPatchesArtifact.download().renameTo(KettingFiles.SERVER_LZMA))
-                                    System.err.println("An error occurred, whilst moving Server Binary Patches to it's correct location. There might be errors Patching!");
+                                    I18n.logError("error.launcher.bin_patches_move");
                                 else element.download();
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
@@ -377,12 +372,12 @@ public class KettingLauncher {
         JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader());
         
         if (args.installOnly()) {
-            System.out.println("Server has been installed.");
+            I18n.log("info.launcher.install_only.success");
             System.exit(0);
         }
     }
     void launch() throws Exception {
-        System.out.println("Launching Ketting...");
+        I18n.log("info.launcher.launching");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());

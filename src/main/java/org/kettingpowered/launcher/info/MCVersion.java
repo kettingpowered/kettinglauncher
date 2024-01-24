@@ -5,6 +5,7 @@ import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.ketting.internal.MajorMinorPatchVersion;
 import org.kettingpowered.ketting.internal.Tuple;
 import org.kettingpowered.launcher.ParsedArgs;
+import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.utils.FileUtils;
 
 import java.io.*;
@@ -77,18 +78,17 @@ public class MCVersion {
                     .toList();
             if (mc_versions.size() == 1){
                 mc = mc_versions.get(0);
-                System.out.println("Inferring minecraft version '"+mc+"' based on the mapping configuration present in the libraries folder.");
+                I18n.log("info.mc_version.from_mappings", mc);
                 return mc;
             } else if (mc_versions.size() > 1) {
-                System.out.println("There are multiple mapping configurations for multiple minecraft versions present in the libraries folder.");
+                I18n.log("info.mc_version.multiple_mappings", String.join(", ", mc_versions));
             }
         }
         //Ask for a version
         {
-            System.out.println("Could not automatically determine the minecraft version.");
-            System.out.println("Please enter the minecraft version you want to use");
-            System.out.println("The following versions are supported: " + String.join(", ", supportedMcVersions));
-            System.out.print("Minecraft version: ");
+            I18n.log("info.mc_version.manual_enter");
+            I18n.log("info.mc_version.manual_enter.supported", String.join(", ", supportedMcVersions));
+            System.out.print(I18n.get("info.mc_version.manual_enter.prompt"));
 
             int wrong = 0;
 
@@ -97,19 +97,19 @@ public class MCVersion {
                 String answer = console.nextLine();
                 if (answer == null || answer.isBlank()) {
                     if (wrong++ >= 2) {
-                        System.err.println("You have typed the wrong answer too many times. Exiting.");
+                        I18n.logError("error.mc_version.manual_enter.too_many_attempts");
                         System.exit(1);
                     }
-                    System.err.println("Please enter a valid version.");
-                    System.out.print("Minecraft version: ");
+                    I18n.logError("info.mc_version.manual_enter.invalid");
+                    System.out.print(I18n.get("info.mc_version.manual_enter.prompt"));
                     continue;
                 }
                 if (supportedMcVersions.contains(answer.trim())) {
                     mc = answer;
                     return mc;
                 }
-                System.out.println("The version you entered is not supported.");
-                System.out.print("Minecraft version: ");
+                I18n.logError("error.mc_version.manual_enter.not_supported", answer.trim());
+                System.out.print(I18n.get("info.mc_version.manual_enter.prompt"));
             }
         }
     }
