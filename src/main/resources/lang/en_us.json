@@ -19,6 +19,7 @@
   "error.launcher.no_server_version": "No Ketting version found for Minecraft version %s",
   "error.launcher.unrecognized_version": "Unrecognized launcher version",
   "error.launcher.update_failed": "Failed to update launcher, please check if this application has write permissions",
+  "error.launcher.no_launch_class": "Failed to find any usable Class to launch Ketting with",
   "error.libraries.failed_to_load": "Failed to load libraries",
   "error.maven.all_repos_failed": "All provided repositories failed to provide a dependency",
   "error.maven.failed_to_delete_dep": "Something went wrong while trying to delete dependency %s",

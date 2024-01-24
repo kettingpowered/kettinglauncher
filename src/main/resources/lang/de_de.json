@@ -19,6 +19,7 @@
   "error.launcher.no_server_version": "Es konnte keine Ketting Version für die Minecraft Version %s gefunden werden",
   "error.launcher.unrecognized_version": "Nicht erkannte Launcher Version",
   "error.launcher.update_failed": "Der Launcher konnte nicht aktualisiert werden, bitte überprüfe, ob das Programm Schreibrechte besitzt",
+  "error.launcher.no_launch_class": "Es konnte keine Klasse gefunden werden, mit der Ketting gestartet werden kann",
   "error.libraries.failed_to_load": "Die Bibliotheken konnten nicht geladen werden",
   "error.maven.all_repos_failed": "Alle zur Verfügung gestellten Repositories konnten eine Abhängigkeit nicht bereitstellen",
   "error.maven.failed_to_delete_dep": "Beim Löschen der Abhängigkeiten lief etwas schief %s",

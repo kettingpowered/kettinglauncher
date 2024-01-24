@@ -4,6 +4,8 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
+import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
+import org.kettingpowered.ketting.internal.hacks.Unsafe;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
@@ -16,6 +18,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.spi.URLStreamHandlerProvider;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -352,10 +355,12 @@ public class KettingLauncher {
             libs.addLoadedLib(KettingFileVersioned.FORGE_PATCHED_JAR);
             libs.addLoadedLib(KettingFileVersioned.SERVER_JAR);
             
+            addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR, builder);
+            addToClassPath(KettingFileVersioned.SERVER_JAR, builder);
             System.setProperty("java.class.path", builder.toString());
+            System.setProperty("jdk.module.path", builder.toString());
+            System.setProperty("ignoreList","\0");//Don't ignore anything please.
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
-            addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR);
-            addToClassPath(KettingFileVersioned.SERVER_JAR);
         }
         downloadMCP.join();
         if (Patcher.checkUpdateNeeded(KettingConstants.MINECRAFT_VERSION, KettingConstants.FORGE_VERSION, KettingConstants.KETTING_VERSION, false))
@@ -377,23 +382,50 @@ public class KettingLauncher {
             System.exit(0);
         }
     }
+
     void launch() throws Exception {
         I18n.log("info.launcher.launching");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
         arg_list.add(args.launchTarget());
-
-        Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader())
-                .getMethod("main", String[].class)
+        
+        Class<?> launchClass = null;
+        
+        Exception exception = new Exception(I18n.get("error.launcher.no_launch_class"));
+        
+        try {
+            launchClass = Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader());
+        }catch(Throwable t){
+            exception.addSuppressed(t);
+        }
+        
+        MajorMinorPatchVersion<Integer> mc = MajorMinorPatchVersion.parse(KettingConstants.MINECRAFT_VERSION).convertMMP(Integer::parseInt);
+        
+        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,1, null)) <=0 ){
+            try {
+                launchClass = Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, KettingLauncher.class.getClassLoader());
+                oldLauncherStuff();
+            }catch(Throwable t){
+                exception.addSuppressed(t);
+            }
+        }
+        
+        if(launchClass == null) throw exception;
+        
+        launchClass.getMethod("main", String[].class)
                 .invoke(null, (Object) arg_list.toArray(String[]::new));
     }
+    
+    private void oldLauncherStuff() {
+        ServerInitHelper.addOpens("java.base", "java.lang.invoke", "ALL-UNNAMED");
+    }
 
-    private void addToClassPath(File file) {
+    private void addToClassPath(File file, StringBuilder builder) {
         try {
             libs.addLoadedLib(file);//Yes, this is important, and fixes an issue with forge not finding language jars
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        System.setProperty("java.class.path", System.getProperty("java.class.path") + File.pathSeparator + file.getAbsolutePath());
+        builder.append(File.pathSeparator).append(file.getAbsolutePath());
     }
 }
