@@ -3,6 +3,7 @@ package org.kettingpowered.launcher.lang;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
+import org.kettingpowered.launcher.Main;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ public class I18n {
 
     public static void load(boolean silent) {
         if (current != null) return;
+        silent = silent && !Main.DEBUG;
 
         current = Locale.getDefault();
 
@@ -41,9 +43,10 @@ public class I18n {
     }
 
     private static void loadFile(String langCode, Map<String, String> toAdd, boolean silent) {
+        silent = silent && !Main.DEBUG;
         try (InputStream lang = I18n.class.getClassLoader().getResourceAsStream(LANG_PATH + langCode + ".json")) {
-            if (lang == null && !silent) {
-                System.out.println("Language file not found for " + langCode + ", using default");
+            if (lang == null) {
+                if (!silent) System.out.println("Language file not found for " + langCode + ", using default");
                 return;
             }
 

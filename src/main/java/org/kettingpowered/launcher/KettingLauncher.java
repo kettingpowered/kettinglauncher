@@ -118,12 +118,6 @@ public class KettingLauncher {
         else mc_version = Bundled_McVersion;
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues.
-        if (Patcher.checkUpdateNeeded()) {
-            if (Main.DEBUG) I18n.log("debug.patcher.update");
-            //prematurely delete files to prevent errors
-            FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
-            FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
-        }
 
         if(!Bundled) ensureOneServerAndUpdate(mc_version);
         else extractBundledContent();
@@ -255,7 +249,8 @@ public class KettingLauncher {
             }
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
             
-            if(versions.isEmpty()) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
+            needsDownload = versions.isEmpty();
+            if(needsDownload) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
             else if(versions.size() > 1) {
                 serverVersion = versions.get(0);
                 Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>> version = serverVersion;
@@ -263,7 +258,6 @@ public class KettingLauncher {
             }else{
                 serverVersion = versions.get(0);
             }
-            needsDownload = versions.isEmpty();
         }
         
         //if we don't have a ketting server version for the given minecraft version or there is a new ketting server version for the given minecraft version and server updates are enabled:
@@ -281,6 +275,12 @@ public class KettingLauncher {
                 System.exit(1);
             }
             serverVersion = parsedServerVersions.get(0);
+        }
+        if (Patcher.checkUpdateNeeded(mc_mmp.toString(), serverVersion.t1().toString(), serverVersion.t2().toString(), args.enableServerUpdator() || needsDownload)){
+            if (Main.DEBUG) I18n.log("debug.patcher.update");
+            //prematurely delete files to prevent errors
+            FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
+            FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
         }
         //and download it
         if (args.enableServerUpdator() || needsDownload) {
@@ -358,7 +358,8 @@ public class KettingLauncher {
             addToClassPath(KettingFileVersioned.SERVER_JAR);
         }
         downloadMCP.join();
-        if (Patcher.checkUpdateNeeded()) new Patcher();
+        if (Patcher.checkUpdateNeeded(KettingConstants.MINECRAFT_VERSION, KettingConstants.FORGE_VERSION, KettingConstants.KETTING_VERSION, false))
+            new Patcher();
 
         JavaHacks.clearReservedIdentifiers();
         Arrays.stream(libs.getLoadedLibs())
