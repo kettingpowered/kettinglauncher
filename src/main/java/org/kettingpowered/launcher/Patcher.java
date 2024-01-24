@@ -11,6 +11,9 @@ import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.launcher.betterui.BetterUI;
+import org.kettingpowered.launcher.dependency.Dependency;
+import org.kettingpowered.launcher.dependency.Maven;
+import org.kettingpowered.launcher.dependency.MavenArtifact;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.lang.I18n;
@@ -25,10 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Patcher {
 
@@ -201,7 +201,8 @@ public class Patcher {
                     .append(HashUtils.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
         }
     }
-    public static boolean checkUpdateNeeded() {
+
+    public static boolean checkUpdateNeeded(String mcVersion, String forgeVersion, String kettingVersion, boolean updating) {
         if (!KettingFiles.STORED_HASHES.exists()) return true;
         try (BufferedReader reader = new BufferedReader(new FileReader(KettingFiles.STORED_HASHES))){
             return !reader.lines()
@@ -211,14 +212,13 @@ public class Patcher {
                         try {
                             return switch (args[0].trim()) {
                                 case "installJson" ->
-                                        value.equals(HashUtils.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"));
+                                        checkUpdateNeededInstallerJson(mcVersion, forgeVersion, kettingVersion, value, updating);
                                 case "serverLzma" ->
                                         value.equals(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
-                                case "server" ->
-                                    value.equals(HashUtils.getHash(KettingFileVersioned.SERVER_JAR, "SHA3-512"));
+                                case "server" -> checkUpdateNeededServer(mcVersion, value);
                                 default -> false;
                             };
-                        } catch (NoSuchAlgorithmException | IOException e) {
+                        } catch (Exception e) {
                             return false;
                         }
                     });
@@ -226,6 +226,28 @@ public class Patcher {
             return true;
         }
     }
+    public static boolean checkUpdateNeededServer(String mcVersion, String hash) throws Exception {
+        final File NMSDir = new File(KettingFiles.NMS_BASE_DIR, mcVersion);
+        final File SERVER_JAR = new File(NMSDir, "server-" + mcVersion + ".jar");
+        return hash.equals(HashUtils.getHash(SERVER_JAR, "SHA3-512"));
+    }
+    public static boolean checkUpdateNeededInstallerJson(String mcVersion, String forgeVersion, String kettingVersion, String hash, boolean updating) throws Exception {
+        final String mcForgeKettingVersion = mcVersion+"-"+forgeVersion+"-"+kettingVersion;
+        if (updating){
+            Dependency<MavenArtifact> dep = new MavenArtifact(
+                    KettingConstants.KETTINGSERVER_GROUP,
+                    Main.FORGE_SERVER_ARTIFACT_ID,
+                    mcForgeKettingVersion,
+                    Optional.of("installscript"),
+                    Optional.of("json")
+            ).downloadDependencyHash();
+            if (Maven.needsDownload(dep.hash(), KettingFiles.LIBRARIES_DIR.toPath(), dep)) return false;
+        }
+        final File forgeServerDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, mcForgeKettingVersion);
+        final File installJson = new File(forgeServerDir, "forge-" + mcForgeKettingVersion + "-installscript.json");
+        return hash.equals(HashUtils.getHash(installJson,"SHA3-512"));
+    }
+
 
     private void mute() {
         System.setOut(log);
