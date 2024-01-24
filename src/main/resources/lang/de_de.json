@@ -26,7 +26,7 @@
   "error.maven.no_hash": "Kein Hash konnte für %s gefunden werden",
   "error.maven.no_versions": "Die Maven Metadata enthält keinen 'versions' Tag",
   "error.maven.unknown_error": "Beim Herunterladen der Abhängigkeiten ist ein unbekannter Fehler aufgetreten",
-  "error.mc_version.manual_enter.invalid": "Ungültige Minecraft Version, bitte ",
+  "error.mc_version.manual_enter.invalid": "Ungültige Minecraft Version, bitte versuche es erneut",
   "error.mc_version.manual_enter.not_supported": "Die Minecraft Version %s wird nicht unterstützt",
   "error.mc_version.manual_enter.too_many_attempts": "Es wurde zu oft eine ungültige Minecraft Version eingegeben, bitte starte den Launcher neu",
   "error.network_utils.hash_mismatch": "%s Hash-Fehler (erwartete %s, bekam %s)",
