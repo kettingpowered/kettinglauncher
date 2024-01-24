@@ -39,7 +39,7 @@ public class NetworkUtils {
             conn = new URL(url).openConnection();
             conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0");
 
-            int timeout = (int) TimeUnit.SECONDS.toMillis(20);
+            int timeout = (int) TimeUnit.SECONDS.toMillis(60);
             conn.setConnectTimeout(timeout);
             conn.setReadTimeout(timeout);
         } catch (IOException e) {
