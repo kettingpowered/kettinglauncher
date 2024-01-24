@@ -85,6 +85,9 @@ public class KettingLauncher {
     private final ParsedArgs args;
     private final BetterUI ui;
     private final Libraries libs = new Libraries();
+
+    private final List<String> serverVersions = new ArrayList<>();
+    private final List<String> availableMcVersions = new ArrayList<>();
     
     KettingLauncher(String[] str_args) throws Exception {
         ui = new BetterUI(KettingConstants.NAME);
@@ -98,7 +101,21 @@ public class KettingLauncher {
     public void init() throws Exception {
         final String mc_version;
         if (Main.DEBUG && Bundled) System.out.println("We are in a bundled jar. Read Version information from manifest.");
-        if (!Bundled) mc_version = MCVersion.getMc(args);
+
+        //Cache ketting versions
+        final List<String> depVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
+        serverVersions.addAll(depVersions);
+
+        //Strip the minecraft version from the ketting version, by splitting by - and getting the first entry
+        availableMcVersions.addAll(depVersions.stream().map(version -> {
+            try {
+                return version.split("-")[0];
+            } catch (Exception e) { //Make sure that we don't crash, if the version is invalid
+                return null;
+            }
+        }).filter(Objects::nonNull).distinct().sorted().toList());
+
+        if (!Bundled) mc_version = MCVersion.getMc(args, availableMcVersions);
         else mc_version = Bundled_McVersion;
         //This cannot get moved past the ensureOneServerAndUpdate call. 
         //It will cause the just downloaded server to be removed, which causes issues.
@@ -259,7 +276,6 @@ public class KettingLauncher {
         if (needsDownload) System.out.println("Downloading Server, since there is none currently present. Using determined Minecraft version: "+ mc_version);
         // get the newest version
         if (args.enableServerUpdator() || needsDownload) {
-            final List<String> serverVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
             if (Main.DEBUG) {
                 System.out.println("Available Ketting versions");

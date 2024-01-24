@@ -8,19 +8,14 @@ import org.kettingpowered.launcher.ParsedArgs;
 import org.kettingpowered.launcher.utils.FileUtils;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author C0D3 M4513R
  */
 public class MCVersion {
     private static String mc;
-    public static String getMc(ParsedArgs args){
+    public static String getMc(ParsedArgs args, List<String> supportedMcVersions){
         if (mc != null) return mc;
 
         //Check for a mcversion.txt file, this has priority
@@ -88,16 +83,35 @@ public class MCVersion {
                 System.out.println("There are multiple mapping configurations for multiple minecraft versions present in the libraries folder.");
             }
         }
-        //and now we are out of options.
-        System.err.println("""
-                Could not determine the active server minecraft version. Please specify it, by specifying one of the following:
-                 - creating a file named 'mcversion.txt' with the desired minecraft version (e.g. 1.20.4).
-                 - the '--minecraftVersion' argument. E.g.: add ' --minecraftVersion 1.20.4 ' after the '-jar' argument
-                 - the java property 'kettinglauncher.minecraftVersion' E.g.: ' -Dkettinglauncher.minecraftVersion=1.20.4 ' before the '-jar' argument
-                 - the environment variable 'kettinglauncher_minecraftVersion' E.g. ' kettinglauncher_minecraftVersion=1.20.4 ' before the java executable.
-                 """);
-        System.exit(1);
-        throw new RuntimeException();//bogus, but has to be there to stop the compiler from complaining, that there is no return value here.
+        //Ask for a version
+        {
+            System.out.println("Could not automatically determine the minecraft version.");
+            System.out.println("Please enter the minecraft version you want to use");
+            System.out.println("The following versions are supported: " + String.join(", ", supportedMcVersions));
+            System.out.print("Minecraft version: ");
+
+            int wrong = 0;
+
+            Scanner console = new Scanner(System.in);
+            while (true) {
+                String answer = console.nextLine();
+                if (answer == null || answer.isBlank()) {
+                    if (wrong++ >= 2) {
+                        System.err.println("You have typed the wrong answer too many times. Exiting.");
+                        System.exit(1);
+                    }
+                    System.err.println("Please enter a valid version.");
+                    System.out.print("Minecraft version: ");
+                    continue;
+                }
+                if (supportedMcVersions.contains(answer.trim())) {
+                    mc = answer;
+                    return mc;
+                }
+                System.out.println("The version you entered is not supported.");
+                System.out.print("Minecraft version: ");
+            }
+        }
     }
 
     private static String readFromIS(@Nullable InputStream versionStream) {
