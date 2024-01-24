@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
-import org.kettingpowered.ketting.internal.hacks.Unsafe;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
@@ -18,7 +17,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.spi.URLStreamHandlerProvider;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -84,9 +82,9 @@ public class KettingLauncher {
     
 
     private final Path eula = new File(KettingFiles.MAIN_FOLDER_FILE, "eula.txt").toPath();
-    private final ParsedArgs args;
+    final ParsedArgs args;
     private final BetterUI ui;
-    private final Libraries libs = new Libraries();
+    final Libraries libs = new Libraries();
 
     private final List<String> serverVersions = new ArrayList<>();
     private final List<String> availableMcVersions = new ArrayList<>();
@@ -383,7 +381,7 @@ public class KettingLauncher {
         }
     }
 
-    void launch() throws Exception {
+    String launch() throws Exception {
         I18n.log("info.launcher.launching");
         final List<String> arg_list = new ArrayList<>(args.args());
         arg_list.add("--launchTarget");
@@ -395,6 +393,7 @@ public class KettingLauncher {
         
         try {
             launchClass = Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader());
+            return "net.minecraftforge.bootstrap.ForgeBootstrap";
         }catch(Throwable t){
             exception.addSuppressed(t);
         }
@@ -404,20 +403,14 @@ public class KettingLauncher {
         if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,1, null)) <=0 ){
             try {
                 launchClass = Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, KettingLauncher.class.getClassLoader());
-                oldLauncherStuff();
+                return "cpw.mods.bootstraplauncher.BootstrapLauncher";
             }catch(Throwable t){
                 exception.addSuppressed(t);
             }
         }
-        
-        if(launchClass == null) throw exception;
-        
-        launchClass.getMethod("main", String[].class)
-                .invoke(null, (Object) arg_list.toArray(String[]::new));
-    }
-    
-    private void oldLauncherStuff() {
-        ServerInitHelper.addOpens("java.base", "java.lang.invoke", "ALL-UNNAMED");
+
+        throw exception;
+
     }
 
     private void addToClassPath(File file, StringBuilder builder) {
@@ -426,6 +419,6 @@ public class KettingLauncher {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        builder.append(File.pathSeparator).append(file.getAbsolutePath());
+//        builder.append(File.pathSeparator).append(file.getAbsolutePath());
     }
 }

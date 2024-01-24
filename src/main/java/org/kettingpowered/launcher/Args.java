@@ -43,7 +43,7 @@ public class Args {
         boolean daus = containsArg("-daus");
         boolean enableServerUpdate = !(dau||daus);
         boolean enableLauncherUpdate = !containsArg("-daul") && !"dev-env".equals(KettingLauncher.Version);
-        @NotNull String target = Objects.requireNonNullElse(getArg("--launchTarget"), "forge_server");
+        @Nullable String target = getArg("--launchTarget");
         @Nullable String minecraftVersion = getArg("-minecraftVersion");
         //backward compatibility
         if (minecraftVersion == null) minecraftVersion = getArg("-minecraftVersion");

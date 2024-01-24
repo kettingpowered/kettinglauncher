@@ -11,6 +11,7 @@
   "debug.maven.re_downloading.empty_hash": "Lade %s erneut herunter wegen einem leeren Hash",
   "debug.maven.re_downloading.hash_mismatch": "Lade %s erneut herunter wegen einem Hash-Fehler (erwartete %s, bekam %s)",
   "debug.patcher.update": "Die Server-Dateien sind nicht aktuell, aktualisiere...",
+  "debug.launching": "Starte: ",
 
   "error.launcher.bin_patches_move": "Das Verschieben der Server-Bin-Patches ist fehlgeschlagen, das könnte Fehler beim Patchen verursachen!",
   "error.launcher.bundle_extract_failed": "Das extrahieren der eingebundenen JAR Inhalte ist fehlgeschlagen",

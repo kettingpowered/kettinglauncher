@@ -11,6 +11,7 @@
   "debug.maven.re_downloading.empty_hash": "Re-downloading %s because of an empty hash",
   "debug.maven.re_downloading.hash_mismatch": "Re-downloading %s because of a hash mismatch (expected %s, got %s)",
   "debug.patcher.update": "Server files are outdated, updating...",
+  "debug.launching": "Launching: ",
 
   "error.launcher.bin_patches_move": "Failed to move server bin patches to the correct directory, this could cause issues while patching!",
   "error.launcher.bundle_extract_failed": "Failed to extract bundled jar content",
