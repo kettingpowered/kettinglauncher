@@ -343,7 +343,7 @@ public class KettingLauncher {
         }
         downloadMCP.join();
         if (Patcher.checkUpdateNeeded(KettingConstants.MINECRAFT_VERSION, KettingConstants.FORGE_VERSION, KettingConstants.KETTING_VERSION, false))
-            new Patcher();
+            new Patcher(Main.libs);
 
         JavaHacks.clearReservedIdentifiers();
         Arrays.stream(libs.getLoadedLibs())
@@ -376,7 +376,7 @@ public class KettingLauncher {
         
         MajorMinorPatchVersion<Integer> mc = MajorMinorPatchVersion.parse(KettingConstants.MINECRAFT_VERSION).convertMMP(Integer::parseInt);
         
-        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,1, null)) <=0 ){
+        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,2, null)) <=0 ){
             try {
                 Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, cl);
                 return "cpw.mods.bootstraplauncher.BootstrapLauncher";

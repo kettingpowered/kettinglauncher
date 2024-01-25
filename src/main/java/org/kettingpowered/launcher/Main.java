@@ -35,6 +35,7 @@ public class Main {
     public static final String INSTALLER_LIBRARIES_FOLDER = KettingConstants.INSTALLER_LIBRARIES_FOLDER;
     public static final MavenArtifact KETTINGCOMMON = new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcommon", "1.0.0", Optional.empty(), Optional.of("jar"));
     static Instrumentation INST;
+    static Libraries libs = new Libraries();
 
     @SuppressWarnings("unused")
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
@@ -100,7 +101,7 @@ public class Main {
         //Damn classloaders
         I18n.load(true);
 
-        final Libraries libs = new Libraries();
+        Libraries libs = new Libraries();
         List<Dependency<MavenArtifact>> deps = dependencyList.stream()
                 .map(obj->{
                     try{
@@ -158,6 +159,19 @@ public class Main {
     }
 
     public static void main(String[] args) throws Throwable {
+        //these are used later in the patcher, to prevent us from loading excessive classes (which will fuck module definition/loading)
+        try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
+            libs.downloadExternal(
+                    stream.lines()
+                    .map(Dependency::parse)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList(),
+                    true
+            );
+        }
+        libs.addLoadedLib(Main.LauncherJar.toURI().toURL());
+
         KettingLauncher launcher = new KettingLauncher(args);
         launcher.init();
         launcher.prepareLaunch();

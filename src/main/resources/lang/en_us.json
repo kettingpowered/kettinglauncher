@@ -1,6 +1,7 @@
 {
   "debug.bundled": "Bundled jar detected, reading manifest...",
   "debug.bundled.extra": "Bundled jar detected, found MC version %s, Forge version %s and Ketting version %s",
+  "debug.classloader.delagating": "Delegating classloading of %s",
   "debug.launcher.available_server_versions": "Available Ketting versions",
   "debug.maven.dep_hash_match": "Cache hit for %s, hash matches",
   "debug.maven.dep_not_found": "Dependency '%s' does not exist",

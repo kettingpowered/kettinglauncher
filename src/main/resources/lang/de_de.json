@@ -1,6 +1,7 @@
 {
   "debug.bundled": "Eingebundene JAR erkannt, lese Manifest...",
   "debug.bundled.extra": "Eingebundene JAR erkannt, MC Version %s, Forge Version %s und Ketting Version %s gefunden",
+  "debug.classloader.delagating": "Delegiere das Laden der Klasse: %s",
   "debug.launcher.available_server_versions": "Verfügbare Ketting Versionen",
   "debug.maven.dep_hash_match": "Cache-Treffer für %s, Hash ist identisch",
   "debug.maven.dep_not_found": "Abhängigkeit '%s' existiert nicht",
