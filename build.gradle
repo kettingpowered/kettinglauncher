@@ -19,7 +19,7 @@ repositories {
     mavenCentral()
     maven { url = 'https://nexus.c0d3m4513r.com/repository/Ketting/' }
     maven { url = 'https://nexus.c0d3m4513r.com/repository/Forge/' }
-    mavenLocal()
+//    mavenLocal()
 }
 
 java {

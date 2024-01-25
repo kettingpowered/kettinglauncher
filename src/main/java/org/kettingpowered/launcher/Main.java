@@ -32,6 +32,7 @@ public class Main {
     public static final MavenArtifact KETTINGCOMMON = new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcommon", "1.0.0", Optional.empty(), Optional.of("jar"));
     static Instrumentation INST;
     private static KettingLauncher launcher = null;
+    private static String programm = null;
     private static List<String> jvmArg = new ArrayList<>();
     private static List<String> procArg = new ArrayList<>();
 
@@ -64,6 +65,7 @@ public class Main {
 
         if (DEBUG) System.out.println("[Agent] premain lib load end");
 
+        programm = ProcessHandle.current().info().command().orElse(null);
         List<String> args = List.of(ProcessHandle.current().info().arguments().orElseGet(()->new String[0]));
         int index = args.indexOf("-jar");
         if (index >= 0){
@@ -169,26 +171,30 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String main = launcher.launch();
         final var defaultArgs = getDefaultArgs(launcher.args, launcher.libs, main);
-        List<String> newArgs = new ArrayList<>(jvmArg);
-        newArgs.addAll(defaultArgs.t1());
+        List<String> newArgs = new ArrayList<>();
+        newArgs.add(programm);
+        newArgs.addAll(jvmArg);
+        newArgs.addAll(defaultArgs[0]);
         newArgs.add("-Dketting.remapper.dump=./.mixin.out/plugin_classes");
         newArgs.add(main);
-        newArgs.addAll(defaultArgs.t2());
+        newArgs.addAll(defaultArgs[1]);
 
-        if (Main.DEBUG) System.out.println(I18n.get("debug.launching") + Arrays.toString(newArgs.toArray()));
+        if (Main.DEBUG) System.out.println(I18n.get("debug.launching") + String.join(" ", newArgs));
         Runtime.getRuntime().gc();
-
+        Runtime.getRuntime().freeMemory();
+        
         new ProcessBuilder(newArgs)
                 .inheritIO()
-                .start();
-        //purposely exit here. Some people will add args that specify a minimum ram allocation.
+                .start()
+                .waitFor();
     }
     
-    private static Tuple<List<String>, List<String>> getDefaultArgs(ParsedArgs args, Libraries libraries, String main){
+    private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries, String main){
         //noinspection EnhancedSwitchMigration
         switch (main) {
-            case "cpw.mods.bootstraplauncher.BootstrapLauncher": 
-                return new Tuple<>(
+            case "cpw.mods.bootstraplauncher.BootstrapLauncher":
+                //noinspection unchecked
+                return new List[] {
                     Arrays.asList(
                             "-p",
                             Arrays.stream(libraries.getLoadedLibs())
@@ -206,6 +212,18 @@ public class Main {
                                     }).filter(Objects::nonNull)
                                     .map(dep->new File(dep).getAbsolutePath())
                                     .collect(Collectors.joining(File.pathSeparator)),
+                            "-cp",
+                            Arrays.stream(libraries.getLoadedLibs())
+                                    .filter(url -> !url.toString().contains("commons-lang/commons-lang"))
+                                    .map(url-> {
+                                    try {
+                                        return url.toURI();
+                                    } catch (URISyntaxException e) {
+                                        return null;
+                                    }
+                                }).filter(Objects::nonNull)
+                                .map(dep->new File(dep).getAbsolutePath())
+                                .collect(Collectors.joining(File.pathSeparator)),
                             "--add-modules ALL-MODULE-PATH",
                             "--add-opens java.base/java.util.jar=cpw.mods.securejarhandler",
                             "--add-opens java.base/java.lang.invoke=cpw.mods.securejarhandler",
@@ -227,16 +245,30 @@ public class Main {
                                 "--fml.mcpVersion",
                                 KettingConstants.MCP_VERSION
                         )
-                );
+                };
             case  "net.minecraftforge.bootstrap.ForgeBootstrap":
             default:
-                return new Tuple<>(
-                        Collections.emptyList(),
+                //noinspection unchecked
+                return new List[]{
                         List.of(
-                                "--launchTarget", 
-                                args.launchTarget()!=null? args.launchTarget() : "forge_server"
+                                "-cp",
+                                Arrays.stream(libraries.getLoadedLibs())
+                                        .filter(url -> !url.toString().contains("commons-lang/commons-lang"))
+                                        .map(url -> {
+                                            try {
+                                                return url.toURI();
+                                            } catch (URISyntaxException e) {
+                                                return null;
+                                            }
+                                        }).filter(Objects::nonNull)
+                                        .map(dep -> new File(dep).getAbsolutePath())
+                                        .collect(Collectors.joining(File.pathSeparator))
+                        ),
+                        List.of(
+                                "--launchTarget",
+                                args.launchTarget() != null ? args.launchTarget() : "forge_server"
                         )
-                );
+                };
         }
     }
 }
