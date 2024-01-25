@@ -90,7 +90,7 @@ public class BetterUI {
             return eula.hasAgreedToEULA();
 
         if (!eula.hasAgreedToEULA()) {
-            System.out.println("WARNING: It appears you have not agreed to the EULA.\nPlease read the EULA (https://account.mojang.com/documents/minecraft_eula) and type 'yes' to continue.");
+            System.out.println("WARNING: It appears you have not agreed to the EULA.\nPlease read the EULA (https://www.minecraft.net/eula) and type 'yes' to continue.");
             System.out.print("Do you accept? (yes/no): ");
 
             int wrong = 0;
