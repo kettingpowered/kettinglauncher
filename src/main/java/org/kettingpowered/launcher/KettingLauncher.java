@@ -4,7 +4,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
-import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
@@ -381,19 +380,13 @@ public class KettingLauncher {
         }
     }
 
-    String launch() throws Exception {
-        I18n.log("info.launcher.launching");
-        final List<String> arg_list = new ArrayList<>(args.args());
-        arg_list.add("--launchTarget");
-        arg_list.add(args.launchTarget());
-        
-        Class<?> launchClass = null;
-        
-        Exception exception = new Exception(I18n.get("error.launcher.no_launch_class"));
+    Class<?> findLaunchClass() throws ClassNotFoundException {
+        Optional<Class<?>> launchClass = Optional.empty();
+
+        ClassNotFoundException exception = new ClassNotFoundException(I18n.get("error.launcher.no_launch_class"));
         
         try {
-            launchClass = Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader());
-            return "net.minecraftforge.bootstrap.ForgeBootstrap";
+            launchClass = Optional.of(Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader()));
         }catch(Throwable t){
             exception.addSuppressed(t);
         }
@@ -402,15 +395,13 @@ public class KettingLauncher {
         
         if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,1, null)) <=0 ){
             try {
-                launchClass = Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, KettingLauncher.class.getClassLoader());
-                return "cpw.mods.bootstraplauncher.BootstrapLauncher";
+                launchClass = Optional.of(Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, KettingLauncher.class.getClassLoader()));
             }catch(Throwable t){
                 exception.addSuppressed(t);
             }
         }
 
-        throw exception;
-
+        return launchClass.orElseThrow(() -> exception);
     }
 
     private void addToClassPath(File file, StringBuilder builder) {

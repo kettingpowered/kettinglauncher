@@ -11,12 +11,12 @@
   "debug.maven.re_downloading.empty_hash": "Lade %s erneut herunter wegen einem leeren Hash",
   "debug.maven.re_downloading.hash_mismatch": "Lade %s erneut herunter wegen einem Hash-Fehler (erwartete %s, bekam %s)",
   "debug.patcher.update": "Die Server-Dateien sind nicht aktuell, aktualisiere...",
-  "debug.launching": "Starte: ",
 
   "error.launcher.bin_patches_move": "Das Verschieben der Server-Bin-Patches ist fehlgeschlagen, das könnte Fehler beim Patchen verursachen!",
   "error.launcher.bundle_extract_failed": "Das extrahieren der eingebundenen JAR Inhalte ist fehlgeschlagen",
   "error.launcher.bundled_file_not_found": "Eingebundene Datei '%s' konnte nicht gefunden werden",
   "error.launcher.hash_algorithm_not_found": "Hash Algorithmus konnte nicht gefunden werden",
+  "error.launcher.launch_failure": "Ketting konnte nicht gestartet werden",
   "error.launcher.no_server_version": "Es konnte keine Ketting Version für die Minecraft Version %s gefunden werden",
   "error.launcher.unrecognized_version": "Nicht erkannte Launcher Version",
   "error.launcher.update_failed": "Der Launcher konnte nicht aktualisiert werden, bitte überprüfe, ob das Programm Schreibrechte besitzt",

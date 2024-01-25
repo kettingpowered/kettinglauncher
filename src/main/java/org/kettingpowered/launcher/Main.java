@@ -1,7 +1,8 @@
 package org.kettingpowered.launcher;
 
 import org.kettingpowered.ketting.internal.KettingConstants;
-import org.kettingpowered.ketting.internal.Tuple;
+import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.lang.I18n;
 
@@ -31,10 +32,6 @@ public class Main {
     public static final String INSTALLER_LIBRARIES_FOLDER = KettingConstants.INSTALLER_LIBRARIES_FOLDER;
     public static final MavenArtifact KETTINGCOMMON = new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcommon", "1.0.0", Optional.empty(), Optional.of("jar"));
     static Instrumentation INST;
-    private static KettingLauncher launcher = null;
-    private static String programm = null;
-    private static List<String> jvmArg = new ArrayList<>();
-    private static List<String> procArg = new ArrayList<>();
 
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         if (DEBUG) System.out.println("[Agent] premain lib load start");
@@ -64,18 +61,6 @@ public class Main {
         }
 
         if (DEBUG) System.out.println("[Agent] premain lib load end");
-
-        programm = ProcessHandle.current().info().command().orElse(null);
-        List<String> args = List.of(ProcessHandle.current().info().arguments().orElseGet(()->new String[0]));
-        int index = args.indexOf("-jar");
-        if (index >= 0){
-            jvmArg = args.subList(0, index);
-            int procArgStart = Math.min(index+2, args.size()-1);
-            procArg = args.subList(procArgStart, args.size());
-        }
-        launcher = new KettingLauncher(procArg.toArray(String[]::new));
-        launcher.init();
-        launcher.prepareLaunch();
     }
     
     @SuppressWarnings("unused")
@@ -169,27 +154,45 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        String main = launcher.launch();
-        final var defaultArgs = getDefaultArgs(launcher.args, launcher.libs, main);
-        List<String> newArgs = new ArrayList<>();
-        newArgs.add(programm);
-        newArgs.addAll(jvmArg);
-        newArgs.addAll(defaultArgs[0]);
-        newArgs.add("-Dketting.remapper.dump=./.mixin.out/plugin_classes");
-        newArgs.add(main);
-        newArgs.addAll(defaultArgs[1]);
+        KettingLauncher launcher = new KettingLauncher(args);
+        launcher.init();
+        launcher.prepareLaunch();
+        Class<?> launchClass = launcher.findLaunchClass();
 
-        if (Main.DEBUG) System.out.println(I18n.get("debug.launching") + String.join(" ", newArgs));
-        Runtime.getRuntime().gc();
-        Runtime.getRuntime().freeMemory();
-        
-        new ProcessBuilder(newArgs)
-                .inheritIO()
-                .start()
-                .waitFor();
+        List<String>[] defaultArgs = getDefaultArgs(launcher.args, launcher.libs, launchClass.getName());
+
+        if (launchClass.getName().contains("cpw.mods.bootstraplauncher.BootstrapLauncher")) {
+            List<String> osSpecificPatchedLibs = KettingLauncher.MANUALLY_PATCHED_LIBS.stream()
+                    .map(lib -> lib.replace("/", File.separator))
+                    .toList();
+
+            ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, osSpecificPatchedLibs);
+        }
+
+        try {
+            List<String> launchArgs = new ArrayList<>(defaultArgs[1]);
+
+            I18n.log("info.launcher.launching");
+
+            launchClass.getDeclaredMethod("main", String[].class)
+                    .invoke(null, (Object) launchArgs.toArray(String[]::new));
+        } catch (Exception e) {
+            throw new RuntimeException(I18n.get("error.launcher.launch_failure"), e);
+        }
     }
     
     private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries, String main){
+        String classPath = Arrays.stream(libraries.getLoadedLibs())
+                .map(url -> {
+                    try {
+                        return url.toURI();
+                    } catch (URISyntaxException e) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull)
+                .map(dep -> new File(dep).getAbsolutePath())
+                .collect(Collectors.joining(File.pathSeparator));
+
         //noinspection EnhancedSwitchMigration
         switch (main) {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
@@ -213,17 +216,7 @@ public class Main {
                                     .map(dep->new File(dep).getAbsolutePath())
                                     .collect(Collectors.joining(File.pathSeparator)),
                             "-cp",
-                            Arrays.stream(libraries.getLoadedLibs())
-                                    .filter(url -> !url.toString().contains("commons-lang/commons-lang"))
-                                    .map(url-> {
-                                    try {
-                                        return url.toURI();
-                                    } catch (URISyntaxException e) {
-                                        return null;
-                                    }
-                                }).filter(Objects::nonNull)
-                                .map(dep->new File(dep).getAbsolutePath())
-                                .collect(Collectors.joining(File.pathSeparator)),
+                            classPath,
                             "--add-modules ALL-MODULE-PATH",
                             "--add-opens java.base/java.util.jar=cpw.mods.securejarhandler",
                             "--add-opens java.base/java.lang.invoke=cpw.mods.securejarhandler",
@@ -252,17 +245,7 @@ public class Main {
                 return new List[]{
                         List.of(
                                 "-cp",
-                                Arrays.stream(libraries.getLoadedLibs())
-                                        .filter(url -> !url.toString().contains("commons-lang/commons-lang"))
-                                        .map(url -> {
-                                            try {
-                                                return url.toURI();
-                                            } catch (URISyntaxException e) {
-                                                return null;
-                                            }
-                                        }).filter(Objects::nonNull)
-                                        .map(dep -> new File(dep).getAbsolutePath())
-                                        .collect(Collectors.joining(File.pathSeparator))
+                                classPath
                         ),
                         List.of(
                                 "--launchTarget",

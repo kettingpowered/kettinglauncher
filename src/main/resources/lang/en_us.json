@@ -11,12 +11,12 @@
   "debug.maven.re_downloading.empty_hash": "Re-downloading %s because of an empty hash",
   "debug.maven.re_downloading.hash_mismatch": "Re-downloading %s because of a hash mismatch (expected %s, got %s)",
   "debug.patcher.update": "Server files are outdated, updating...",
-  "debug.launching": "Launching: ",
 
   "error.launcher.bin_patches_move": "Failed to move server bin patches to the correct directory, this could cause issues while patching!",
   "error.launcher.bundle_extract_failed": "Failed to extract bundled jar content",
   "error.launcher.bundled_file_not_found": "Bundled file '%s' not found",
   "error.launcher.hash_algorithm_not_found": "Hash algorithm not found",
+  "error.launcher.launch_failure": "Failed to launch Ketting",
   "error.launcher.no_server_version": "No Ketting version found for Minecraft version %s",
   "error.launcher.unrecognized_version": "Unrecognized launcher version",
   "error.launcher.update_failed": "Failed to update launcher, please check if this application has write permissions",
