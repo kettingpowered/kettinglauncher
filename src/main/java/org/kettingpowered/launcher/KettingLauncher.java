@@ -140,7 +140,7 @@ public class KettingLauncher {
             final String fileName = prefix+"-"+version + ".jar";
             final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
             try {
-                extractJarContent(KettingFiles.DATA_DIR+fileName, file, true);
+                extractJarContent(KettingFiles.DATA_DIR+fileName, file);
             } catch (IOException e) {
                 failed=true;
                 exception.addSuppressed(e);
@@ -155,7 +155,7 @@ public class KettingLauncher {
             exception.addSuppressed(e);
         }
         try{
-            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"), true);
+            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"));
         } catch (IOException e) {
             failed=true;
             exception.addSuppressed(e);
@@ -176,9 +176,6 @@ public class KettingLauncher {
     }
 
     public static void extractJarContent(@NotNull String from, @NotNull File to) throws IOException {
-        extractJarContent(from, to, false);
-    }
-    public static void extractJarContent(@NotNull String from, @NotNull File to, boolean add_to_cp) throws IOException {
         try (InputStream internalFile = KettingLauncher.class.getClassLoader().getResourceAsStream(from)) {
             if (internalFile == null)
                 throw new IOException(I18n.get("error.launcher.bundled_file_not_found", from));
@@ -197,7 +194,6 @@ public class KettingLauncher {
         } catch (NoSuchAlgorithmException e) {
             throw new IOException(I18n.get("error.launcher.hash_algorithm_not_found"), e);
         }
-        if (add_to_cp) Main.INST.appendToSystemClassLoaderSearch(new JarFile(to));
     }
 
     private void updateLauncher() throws Exception {
@@ -341,23 +337,11 @@ public class KettingLauncher {
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
                                 .filter(dep-> MANUALLY_PATCHED_LIBS.stream().noneMatch(path -> dep.getPath().startsWith(path)))
-                                .peek(dep-> builder.append(File.pathSeparator).append(Maven.getDependencyPath(dep.getPath()).toAbsolutePath()))
                                 .toList(), 
                         true
                 );
             }
             
-            builder.append(File.pathSeparator).append(KettingFileVersioned.FORGE_UNIVERSAL_JAR.getAbsolutePath());
-            MavenArtifact universalJarArtifact = new MavenArtifact(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID, KettingConstants.MINECRAFT_VERSION+"-"+KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION, Optional.of("universal"), Optional.of("jar"));
-            libs.addLoadedLib(Maven.getDependencyPath(universalJarArtifact.getPath()));
-            libs.addLoadedLib(KettingFileVersioned.FORGE_PATCHED_JAR);
-            libs.addLoadedLib(KettingFileVersioned.SERVER_JAR);
-            
-            addToClassPath(KettingFileVersioned.FORGE_PATCHED_JAR, builder);
-            addToClassPath(KettingFileVersioned.SERVER_JAR, builder);
-            System.setProperty("java.class.path", builder.toString());
-            System.setProperty("jdk.module.path", builder.toString());
-            System.setProperty("ignoreList","\0");//Don't ignore anything please.
             System.setProperty("ketting.remapper.dump", "./.mixin.out/plugin_classes");
         }
         downloadMCP.join();
@@ -366,21 +350,12 @@ public class KettingLauncher {
 
         JavaHacks.clearReservedIdentifiers();
         Arrays.stream(libs.getLoadedLibs())
-//                .filter(url -> Main.LOAD_WITH_INST || url.toString().contains("cpw/mods/bootstraplauncher/") || url.toString().contains("net/minecraftforge/bootstrap/"))
                 .forEach(url -> {
-                    if (Main.LOAD_WITH_INST) {
                         try {
                             Main.INST.appendToSystemClassLoaderSearch(new JarFile(new File(url.toURI())));
                         } catch (URISyntaxException | IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }else{
-                        try {
-                            ServerInitHelper.addToPath(new File(url.toURI()).toPath());
-                        } catch (URISyntaxException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
                 });
         
         if (args.installOnly()) {
@@ -414,14 +389,5 @@ public class KettingLauncher {
         }
 
         throw exception;
-    }
-
-    private void addToClassPath(File file, StringBuilder builder) {
-        try {
-            libs.addLoadedLib(file);//Yes, this is important, and fixes an issue with forge not finding language jars
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-//        builder.append(File.pathSeparator).append(file.getAbsolutePath());
     }
 }
