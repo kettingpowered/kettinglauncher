@@ -4,6 +4,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
+import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
@@ -364,17 +365,23 @@ public class KettingLauncher {
             new Patcher();
 
         JavaHacks.clearReservedIdentifiers();
-        if (Main.LOAD_WITH_INST){
-            Arrays.stream(libs.getLoadedLibs())
-                    .map(url-> {
+        Arrays.stream(libs.getLoadedLibs())
+//                .filter(url -> Main.LOAD_WITH_INST || url.toString().contains("cpw/mods/bootstraplauncher/") || url.toString().contains("net/minecraftforge/bootstrap/"))
+                .forEach(url -> {
+                    if (Main.LOAD_WITH_INST) {
                         try {
-                            return new JarFile(new File(url.toURI()));
-                        } catch (IOException | URISyntaxException e) {
+                            Main.INST.appendToSystemClassLoaderSearch(new JarFile(new File(url.toURI())));
+                        } catch (URISyntaxException | IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
-        }
-        JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader());
+                    }else{
+                        try {
+                            ServerInitHelper.addToPath(new File(url.toURI()).toPath());
+                        } catch (URISyntaxException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
         
         if (args.installOnly()) {
             I18n.log("info.launcher.install_only.success");
@@ -382,13 +389,15 @@ public class KettingLauncher {
         }
     }
 
-    Class<?> findLaunchClass() throws ClassNotFoundException {
-        Optional<Class<?>> launchClass = Optional.empty();
-
+    String findLaunchClass() throws ClassNotFoundException {
         ClassNotFoundException exception = new ClassNotFoundException(I18n.get("error.launcher.no_launch_class"));
+        //the AgentClassLoader is used here, because it doesn't propagate to anywhere else.
+        //if we were, we would get errors, that some package is already defined, because we loaded it here.
+        ClassLoader cl = new AgentClassLoader(libs.getLoadedLibs());
         
         try {
-            launchClass = Optional.of(Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, KettingLauncher.class.getClassLoader()));
+            Class.forName("net.minecraftforge.bootstrap.ForgeBootstrap", true, cl);
+            return "net.minecraftforge.bootstrap.ForgeBootstrap";
         }catch(Throwable t){
             exception.addSuppressed(t);
         }
@@ -397,13 +406,14 @@ public class KettingLauncher {
         
         if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,1, null)) <=0 ){
             try {
-                launchClass = Optional.of(Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, KettingLauncher.class.getClassLoader()));
+                Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, cl);
+                return "cpw.mods.bootstraplauncher.BootstrapLauncher";
             }catch(Throwable t){
                 exception.addSuppressed(t);
             }
         }
 
-        return launchClass.orElseThrow(() -> exception);
+        throw exception;
     }
 
     private void addToClassPath(File file, StringBuilder builder) {

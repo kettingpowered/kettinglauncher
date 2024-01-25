@@ -2,6 +2,7 @@ package org.kettingpowered.launcher;
 
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.lang.I18n;
@@ -25,7 +26,8 @@ public class Main {
     public static final File LauncherJar = new File(URLDecoder.decode(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile(), StandardCharsets.UTF_8));
     public static final File LauncherDir = LauncherJar.getParentFile();
     public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
-    public static final boolean LOAD_WITH_INST = true;
+    //honestly, I don't even remember anymore, why I included this, or if this is nessesary still
+    public static final boolean LOAD_WITH_INST = false; 
     public static final String FORGE_SERVER_ARTIFACT_ID = "forge";
     //This is used in a premain context in LibHelper, where KettingCommon might not be available yet.
     //Java is VERY nice however and inlines this at compile-time, saving us the trouble of defining this twice.
@@ -155,30 +157,38 @@ public class Main {
         );
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         KettingLauncher launcher = new KettingLauncher(args);
         launcher.init();
         launcher.prepareLaunch();
-        Class<?> launchClass = launcher.findLaunchClass();
+        String launchClass = launcher.findLaunchClass();
 
-        List<String>[] defaultArgs = getDefaultArgs(launcher.args, launcher.libs, launchClass.getName());
+        List<String>[] defaultArgs = getDefaultArgs(launcher.args, launcher.libs, launchClass);
 
-        if (launchClass.getName().contains("cpw.mods.bootstraplauncher.BootstrapLauncher")) {
-            List<String> osSpecificPatchedLibs = KettingLauncher.MANUALLY_PATCHED_LIBS.stream()
-                    .map(lib -> lib.replace("/", File.separator))
-                    .toList();
-
-            ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, osSpecificPatchedLibs);
-        }
 
         try {
+            if (launchClass.contains("cpw.mods.bootstraplauncher.BootstrapLauncher")) {
+                List<String> osSpecificPatchedLibs = KettingLauncher.MANUALLY_PATCHED_LIBS.stream()
+                        .map(lib -> lib.replace("/", File.separator))
+                        .toList();
+                //Ketting - Todo: java thinks that cpw.mods.securejarhandler is an unnamed module?
+                ServerInitHelper.addOpens("java.base", "java.util.jar", "ALL-UNNAMED");
+                ServerInitHelper.addOpens("java.base", "java.lang.invoke", "ALL-UNNAMED");
+                ServerInitHelper.addExports("java.base", "sun.security.util", "ALL-UNNAMED");
+                ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, osSpecificPatchedLibs);
+            }
+            
+            //it is important to do this after the ServerInitHelper.init,
+            // because this will mark other packages as loaded by this module (which will fuck with declaring/loading modules) 
+            JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader()); 
             List<String> launchArgs = new ArrayList<>(defaultArgs[1]);
 
             I18n.log("info.launcher.launching");
 
-            launchClass.getDeclaredMethod("main", String[].class)
+            Class.forName(launchClass, true, Main.class.getClassLoader())
+                    .getDeclaredMethod("main", String[].class)
                     .invoke(null, (Object) launchArgs.toArray(String[]::new));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException(I18n.get("error.launcher.launch_failure"), e);
         }
     }
@@ -193,6 +203,7 @@ public class Main {
                     }
                 }).filter(Objects::nonNull)
                 .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
+                .filter(str -> !str.isBlank())
                 .collect(Collectors.joining(File.pathSeparator));
 
         //noinspection EnhancedSwitchMigration
@@ -216,14 +227,13 @@ public class Main {
                                     }).filter(Objects::nonNull)
                                     .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
                                     .collect(Collectors.joining(File.pathSeparator)),
-                            "-cp " +classPath,
                             "--add-modules ALL-MODULE-PATH",
                             "--add-opens java.base/java.util.jar=cpw.mods.securejarhandler",
                             "--add-opens java.base/java.lang.invoke=cpw.mods.securejarhandler",
                             "--add-exports java.base/sun.security.util=cpw.mods.securejarhandler",
                             "--add-exports jdk.naming.dns/com.sun.jndi.dns=java.naming",
-                            "-DlegacyClassPath="+System.getProperty("java.class.path"),
-                            "-DlibraryDirectory=libraries",
+                            "-DlegacyClassPath="+classPath,
+                            "-DlibraryDirectory="+KettingConstants.INSTALLER_LIBRARIES_FOLDER,
                             "-Djava.net.preferIPv6Addresses=system"
                         ),
                         Arrays.asList(
