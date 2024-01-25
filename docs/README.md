@@ -9,7 +9,7 @@
 
 [issues]: https://github.com/kettingpowered/kettinglauncher/issues
 
-<img align="right" src="./assets/ketting.png?raw=true" height="150" width="150">
+<img align="right" alt="Ketting Logo" src="./assets/ketting.png?raw=true" height="150" width="150">
 
 [![discord-widget][]][discord-invite]
 [![build-status][]][build-link]

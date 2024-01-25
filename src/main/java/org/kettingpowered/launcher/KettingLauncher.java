@@ -4,17 +4,15 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.*;
-import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
+import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.utils.FileUtils;
-import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -329,7 +327,6 @@ public class KettingLauncher {
         downloadMCP.setName("Download-MCP");
         downloadMCP.start();
         {
-            StringBuilder builder = new StringBuilder();
             try (BufferedReader stream = new BufferedReader(new FileReader(KettingFileVersioned.FORGE_KETTING_LIBS))) {
                 libs.downloadExternal(
                         stream.lines()

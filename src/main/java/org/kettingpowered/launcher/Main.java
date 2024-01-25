@@ -201,7 +201,6 @@ public class Main {
         .filter(str -> !str.isBlank());
     }
     private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries , String main) throws IOException {
-        //noinspection EnhancedSwitchMigration
         switch (main) {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
                 //noinspection unchecked
