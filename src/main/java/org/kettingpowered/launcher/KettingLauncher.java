@@ -364,14 +364,16 @@ public class KettingLauncher {
             new Patcher();
 
         JavaHacks.clearReservedIdentifiers();
-        Arrays.stream(libs.getLoadedLibs())
-                .map(url-> {
-                    try {
-                        return new JarFile(new File(url.toURI()));
-                    } catch (IOException | URISyntaxException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
+        if (Main.LOAD_WITH_INST){
+            Arrays.stream(libs.getLoadedLibs())
+                    .map(url-> {
+                        try {
+                            return new JarFile(new File(url.toURI()));
+                        } catch (IOException | URISyntaxException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).forEach(jarFile -> Main.INST.appendToSystemClassLoaderSearch(jarFile));
+        }
         JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader());
         
         if (args.installOnly()) {

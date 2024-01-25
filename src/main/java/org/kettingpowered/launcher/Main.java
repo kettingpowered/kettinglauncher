@@ -25,6 +25,7 @@ public class Main {
     public static final File LauncherJar = new File(URLDecoder.decode(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile(), StandardCharsets.UTF_8));
     public static final File LauncherDir = LauncherJar.getParentFile();
     public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
+    public static final boolean LOAD_WITH_INST = true;
     public static final String FORGE_SERVER_ARTIFACT_ID = "forge";
     //This is used in a premain context in LibHelper, where KettingCommon might not be available yet.
     //Java is VERY nice however and inlines this at compile-time, saving us the trouble of defining this twice.
@@ -191,7 +192,7 @@ public class Main {
                         return null;
                     }
                 }).filter(Objects::nonNull)
-                .map(dep -> new File(dep).getAbsolutePath())
+                .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
                 .collect(Collectors.joining(File.pathSeparator));
 
         //noinspection EnhancedSwitchMigration
@@ -200,8 +201,7 @@ public class Main {
                 //noinspection unchecked
                 return new List[] {
                     Arrays.asList(
-                            "-p",
-                            Arrays.stream(libraries.getLoadedLibs())
+                            "-p " + Arrays.stream(libraries.getLoadedLibs())
                                     .filter(url -> 
                                             url.toString().contains("org/ow2/asm") || 
                                             url.toString().contains("cpw/mods/securejarhandler") || 
@@ -214,10 +214,9 @@ public class Main {
                                             return null;
                                         }
                                     }).filter(Objects::nonNull)
-                                    .map(dep->new File(dep).getAbsolutePath())
+                                    .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
                                     .collect(Collectors.joining(File.pathSeparator)),
-                            "-cp",
-                            classPath,
+                            "-cp " +classPath,
                             "--add-modules ALL-MODULE-PATH",
                             "--add-opens java.base/java.util.jar=cpw.mods.securejarhandler",
                             "--add-opens java.base/java.lang.invoke=cpw.mods.securejarhandler",
