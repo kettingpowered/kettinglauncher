@@ -6,6 +6,7 @@ plugins {
 }
 
 import net.minecraftforge.gradleutils.PomUtils
+import org.kettingpowered.task.GenerateLibs
 import org.kettingpowered.task.Util
 
 import java.util.stream.Collectors
@@ -60,7 +61,7 @@ ext{
     mainClass = 'org.kettingpowered.launcher.Main'
 }
 
-tasks.register('generateKettingLauncherLibraries', org.kettingpowered.task.GenerateLibs) {
+tasks.register('generateKettingLauncherLibraries', GenerateLibs) {
     configuration = 'transitive'
 }
 

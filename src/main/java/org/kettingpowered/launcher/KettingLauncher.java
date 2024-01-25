@@ -230,7 +230,7 @@ public class KettingLauncher {
                 .forEach(FileUtils::deleteDir);
     }
     
-    private void ensureOneServerAndUpdate(final String mc_version) throws Exception {
+    private void ensureOneServerAndUpdate(final String mc_version) {
         //Parse the given minecraft version 
         final MajorMinorPatchVersion<Integer> mc_mmp;
         {

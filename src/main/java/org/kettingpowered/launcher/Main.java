@@ -33,6 +33,7 @@ public class Main {
     public static final MavenArtifact KETTINGCOMMON = new MavenArtifact(KettingConstants.KETTING_GROUP, "kettingcommon", "1.0.0", Optional.empty(), Optional.of("jar"));
     static Instrumentation INST;
 
+    @SuppressWarnings("unused")
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         if (DEBUG) System.out.println("[Agent] premain lib load start");
 
