@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author C0D3 M4513R
@@ -43,7 +42,7 @@ public class Args {
         boolean daus = containsArg("-daus");
         boolean enableServerUpdate = !(dau||daus);
         boolean enableLauncherUpdate = !containsArg("-daul") && !"dev-env".equals(KettingLauncher.Version);
-        @NotNull String target = Objects.requireNonNullElse(getArg("--launchTarget"), "forge_server");
+        @Nullable String target = getArg("--launchTarget");
         @Nullable String minecraftVersion = getArg("-minecraftVersion");
         //backward compatibility
         if (minecraftVersion == null) minecraftVersion = getArg("-minecraftVersion");

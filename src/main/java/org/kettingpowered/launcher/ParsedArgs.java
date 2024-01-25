@@ -14,5 +14,5 @@ import java.util.List;
  * @param launchTarget what launchTarget will we pass to forge?
  * @param minecraftVersion what minecraftVersion should the server be?
  */
-public record ParsedArgs(@NotNull List<String> args, boolean installOnly, boolean enableServerUpdator, boolean enableLauncherUpdator, @NotNull String launchTarget, @Nullable String minecraftVersion) {
+public record ParsedArgs(@NotNull List<String> args, boolean installOnly, boolean enableServerUpdator, boolean enableLauncherUpdator, @Nullable String launchTarget, @Nullable String minecraftVersion) {
 }

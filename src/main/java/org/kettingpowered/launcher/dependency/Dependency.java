@@ -1,13 +1,10 @@
 package org.kettingpowered.launcher.dependency;
 
 import org.jetbrains.annotations.NotNull;
-import org.kettingpowered.launcher.Main;
-import org.kettingpowered.launcher.internal.utils.HashUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 

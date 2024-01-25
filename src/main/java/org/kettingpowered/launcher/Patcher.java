@@ -205,8 +205,8 @@ public class Patcher {
     public static boolean checkUpdateNeeded(String mcVersion, String forgeVersion, String kettingVersion, boolean updating) {
         if (!KettingFiles.STORED_HASHES.exists()) return true;
         try (BufferedReader reader = new BufferedReader(new FileReader(KettingFiles.STORED_HASHES))){
-            return !reader.lines()
-                    .allMatch(string -> {
+            return reader.lines()
+                    .anyMatch(string -> {
                         String[] args = string.split("=");
                         String value = args[1].trim();
                         try {
@@ -214,7 +214,7 @@ public class Patcher {
                                 case "installJson" ->
                                         checkUpdateNeededInstallerJson(mcVersion, forgeVersion, kettingVersion, value, updating);
                                 case "serverLzma" ->
-                                        value.equals(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
+                                        !value.equals(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"));
                                 case "server" -> checkUpdateNeededServer(mcVersion, value);
                                 default -> false;
                             };
@@ -229,7 +229,10 @@ public class Patcher {
     public static boolean checkUpdateNeededServer(String mcVersion, String hash) throws Exception {
         final File NMSDir = new File(KettingFiles.NMS_BASE_DIR, mcVersion);
         final File SERVER_JAR = new File(NMSDir, "server-" + mcVersion + ".jar");
-        return hash.equals(HashUtils.getHash(SERVER_JAR, "SHA3-512"));
+        boolean upToDate = hash.equals(HashUtils.getHash(SERVER_JAR, "SHA3-512"));
+        if (Main.DEBUG && upToDate) I18n.log("debug.patcher.upToDate.server");
+        if (Main.DEBUG && !upToDate) I18n.log("debug.patcher.notUpToDate.server");
+        return !upToDate;
     }
     public static boolean checkUpdateNeededInstallerJson(String mcVersion, String forgeVersion, String kettingVersion, String hash, boolean updating) throws Exception {
         final String mcForgeKettingVersion = mcVersion+"-"+forgeVersion+"-"+kettingVersion;
@@ -245,7 +248,10 @@ public class Patcher {
         }
         final File forgeServerDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, mcForgeKettingVersion);
         final File installJson = new File(forgeServerDir, "forge-" + mcForgeKettingVersion + "-installscript.json");
-        return hash.equals(HashUtils.getHash(installJson,"SHA3-512"));
+        boolean upToDate = hash.equals(HashUtils.getHash(installJson,"SHA3-512"));
+        if (Main.DEBUG && upToDate) I18n.log("debug.patcher.upToDate.installerJson");
+        if (Main.DEBUG && !upToDate) I18n.log("debug.patcher.notUpToDate.installerJson");
+        return !upToDate;
     }
 
 
