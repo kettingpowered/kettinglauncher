@@ -1,23 +1,19 @@
 package org.kettingpowered.launcher.lang;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 import org.kettingpowered.launcher.Main;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Properties;
 
 public class I18n {
 
     private static final String LANG_PATH = "lang/";
 
-    private static final Map<String, String> translations = new HashMap<>();
-    private static final Map<String, String> fallback = new HashMap<>();
+    private static final Properties translations = new Properties();
+    private static final Properties fallback = new Properties();
 
     private static Locale current;
 
@@ -42,16 +38,15 @@ public class I18n {
             System.out.println("Loaded " + translations.size() + " translations");
     }
 
-    private static void loadFile(String langCode, Map<String, String> toAdd, boolean silent) {
+    private static void loadFile(String langCode, Properties toAdd, boolean silent) {
         silent = silent && !Main.DEBUG;
-        try (InputStream lang = I18n.class.getClassLoader().getResourceAsStream(LANG_PATH + langCode + ".json")) {
+        try (InputStream lang = I18n.class.getClassLoader().getResourceAsStream(LANG_PATH + langCode + ".properties")) {
             if (lang == null) {
                 if (!silent) System.out.println("Language file not found for " + langCode + ", using default");
                 return;
             }
 
-            final JsonElement json = JsonParser.parseReader(new InputStreamReader(lang));
-            json.getAsJsonObject().entrySet().forEach(entry -> toAdd.put(entry.getKey(), entry.getValue().getAsString()));
+            toAdd.load(lang);
         } catch (IOException io) {
             if (silent) return;
             System.err.println("Failed to load language file for " + langCode);
@@ -60,14 +55,14 @@ public class I18n {
     }
 
     public static String get(@NotNull String key) {
-        String translation = translations.get(key);
+        String translation = translations.get(key).toString();
         if (translation == null) {
             if (fallback.isEmpty()) {
                 System.err.println("Missing translation for " + key);
                 return key;
             }
 
-            translation = fallback.get(key);
+            translation = fallback.get(key).toString();
             if (translation == null) {
                 System.err.println("Missing translation for " + key);
                 return key;
