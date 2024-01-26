@@ -55,22 +55,22 @@ public class I18n {
     }
 
     public static String get(@NotNull String key) {
-        String translation = translations.get(key).toString();
+        Object translation = translations.get(key);
         if (translation == null) {
             if (fallback.isEmpty()) {
                 System.err.println("Missing translation for " + key);
                 return key;
             }
 
-            translation = fallback.get(key).toString();
+            translation = fallback.get(key);
             if (translation == null) {
                 System.err.println("Missing translation for " + key);
                 return key;
             }
 
-            return translation;
+            return translation.toString();
         }
-        return translation;
+        return translation.toString();
     }
 
     public static String get(@NotNull String key, Object... args) {

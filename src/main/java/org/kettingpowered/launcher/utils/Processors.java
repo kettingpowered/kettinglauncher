@@ -3,24 +3,33 @@ package org.kettingpowered.launcher.utils;
 import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public final class Processors {
 
-    public static void execute(String processor, String[] args) throws IOException {
+    public static void execute(ClassLoader cl, String processor, String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         processor = processor.split(":")[1];
 
         switch (processor) {
             case "binarypatcher":
-                net.minecraftforge.binarypatcher.ConsoleTool.main(args);
+                Class.forName("net.minecraftforge.binarypatcher.ConsoleTool", true, cl)
+                        .getDeclaredMethod("main", String[].class)
+                        .invoke(null, (Object) args);
                 break;
             case "installertools":
-                net.minecraftforge.installertools.ConsoleTool.main(args);
+                Class.forName("net.minecraftforge.installertools.ConsoleTool", true, cl)
+                        .getDeclaredMethod("main", String[].class)
+                        .invoke(null, (Object) args);
                 break;
             case "jarsplitter":
-                net.minecraftforge.jarsplitter.ConsoleTool.main(args);
+                Class.forName("net.minecraftforge.jarsplitter.ConsoleTool", true, cl)
+                        .getDeclaredMethod("main", String[].class)
+                        .invoke(null, (Object) args);
                 break;
             case "ForgeAutoRenamingTool":
-                net.minecraftforge.fart.Main.main(args);
+                Class.forName("net.minecraftforge.fart.Main", true, cl)
+                        .getDeclaredMethod("main", String[].class)
+                        .invoke(null, (Object) args);
                 break;
             default:
                 throw new IllegalArgumentException(I18n.get("error.processor.unknown_processor", processor));

@@ -5,6 +5,7 @@ import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
+import org.kettingpowered.ketting.internal.hacks.Unsafe;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.lang.I18n;
 
@@ -17,6 +18,7 @@ import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -185,6 +187,8 @@ public class Main {
                 List<String> osSpecificPatchedLibs = KettingLauncher.MANUALLY_PATCHED_LIBS.stream()
                         .map(lib -> lib.replace("/", File.separator))
                         .toList();
+                ((ConcurrentHashMap<?, ?>)Unsafe.lookup().findGetter(ClassLoader.class, "packages", ConcurrentHashMap.class).invoke(Main.class.getClassLoader())).clear();
+                ((List<?>)Unsafe.lookup().findGetter(ClassLoader.class, "classes", ArrayList.class).invoke(Main.class.getClassLoader())).clear();
                 ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, osSpecificPatchedLibs);
             }
             

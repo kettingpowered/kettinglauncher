@@ -131,8 +131,6 @@ public class Patcher {
         //we wrap this, for a similar reason as in KettingLauncher#findMainClass:
         //if we didn't, stuff that would get loaded into the system classloader by this would get flagged as being part of our module, when it shouldn't be. 
         AgentClassLoader cl = new AgentClassLoader(libraries.getLoadedLibs());
-        Method exec = Class.forName(Processors.class.getName(), true, cl)
-                .getDeclaredMethod("execute", String.class, String[].class);
 
         final File logFile = KettingFiles.PATCHER_LOGS;
         if (!logFile.exists()) {
@@ -190,13 +188,13 @@ public class Patcher {
                 try {
                     Thread.currentThread().setContextClassLoader(cl);
                     mute();
-                    exec.invoke(null, jar, parsedArgs.toArray(String[]::new));
+                    Processors.execute(cl,  jar, parsedArgs.toArray(String[]::new));
                     unmute();
                     progressBar.step();
-                } catch (IllegalAccessException | InvocationTargetException e) {
+                } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                     unmute();
                     throw new RuntimeException(I18n.get("error.patcher.processor_fault"), e);
-                }finally{
+                } finally{
                     Thread.currentThread().setContextClassLoader(ocl);
                 }
             });
