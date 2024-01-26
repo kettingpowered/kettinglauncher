@@ -35,7 +35,6 @@ configurations {
     transitive {
         extendsFrom(implementation)
     }
-    includeInJar
 }
 
 dependencies {
@@ -45,9 +44,7 @@ dependencies {
     implementation 'me.tongfei:progressbar:0.10.0' //Used to display progress
     transitive 'org.jline:jline-reader:3.21.0' //needed for progressbar
     transitive 'org.jline:jline-terminal:3.21.0' //needed for progressbar
-
-    //Include gson in the jar
-    includeInJar 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.code.gson:gson:2.10.1'
 
     //Used in Processors
     implementation 'net.minecraftforge:binarypatcher:1.2.0:fatjar'
@@ -65,20 +62,9 @@ tasks.register('generateKettingLauncherLibraries', GenerateLibs) {
     configuration = 'transitive'
 }
 
-tasks.register('generateJarIncludes', Copy) {
-    from configurations.includeInJar.collect { zipTree(it) }
-    into project.buildDir.path + '/includeInJar'
-    exclude 'META-INF/**'
-}
-
 jar{
     dependsOn generateKettingLauncherLibraries
     mustRunAfter generateKettingLauncherLibraries
-
-    dependsOn generateJarIncludes
-    mustRunAfter generateJarIncludes
-
-    from project.buildDir.path + '/includeInJar'
 
     from(generateKettingLauncherLibraries.output) {
         rename {
