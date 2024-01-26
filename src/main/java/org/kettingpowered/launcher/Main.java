@@ -5,7 +5,6 @@ import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
 import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
-import org.kettingpowered.ketting.internal.hacks.Unsafe;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.lang.I18n;
 
@@ -15,10 +14,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
-import java.net.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -184,12 +185,7 @@ public class Main {
 
         try {
             if (launchClass.contains("cpw.mods.bootstraplauncher.BootstrapLauncher")) {
-                List<String> osSpecificPatchedLibs = KettingLauncher.MANUALLY_PATCHED_LIBS.stream()
-                        .map(lib -> lib.replace("/", File.separator))
-                        .toList();
-                ((ConcurrentHashMap<?, ?>)Unsafe.lookup().findGetter(ClassLoader.class, "packages", ConcurrentHashMap.class).invoke(Main.class.getClassLoader())).clear();
-                ((List<?>)Unsafe.lookup().findGetter(ClassLoader.class, "classes", ArrayList.class).invoke(Main.class.getClassLoader())).clear();
-                ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, osSpecificPatchedLibs);
+                ServerInitHelper.init(defaultArgs[0], KettingFiles.LIBRARIES_PATH, KettingLauncher.MANUALLY_PATCHED_LIBS);
             }
             
             //it is important to do this after the ServerInitHelper.init,
@@ -216,6 +212,7 @@ public class Main {
             }
         }).filter(Objects::nonNull)
         .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
+        .map(str->str.replace(File.separatorChar, '/'))//thanks windows
         .filter(str -> !str.isBlank());
     }
     private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries , String main) throws IOException {
@@ -228,7 +225,6 @@ public class Main {
                                     .filter(url -> 
                                             url.toString().contains("org/ow2/asm") || 
                                             url.toString().contains("cpw/mods/securejarhandler")
-
                                     ).map(url-> {
                                         try {
                                             return url.toURI();
@@ -237,6 +233,7 @@ public class Main {
                                         }
                                     }).filter(Objects::nonNull)
                                     .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
+                                    .map(str->str.replace(File.separatorChar, '/'))//thanks windows
                                     .collect(Collectors.joining(File.pathSeparator)),
                             "--add-modules ALL-MODULE-PATH",
                             "--add-opens java.base/java.util.jar=cpw.mods.securejarhandler",

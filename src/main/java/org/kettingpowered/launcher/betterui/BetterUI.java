@@ -47,9 +47,9 @@ public class BetterUI {
         final String java = "Running on Java " + System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")";
         final String launcher = "Launcher version "+ KettingLauncher.Version;
         final String minecraft = "Minecraft version "+ mc_version;
-        final String server = name + " version " + KettingConstants.VERSION;
-        final String bukkit = "Bukkit version  " + KettingConstants.BUKKIT_PACKAGE_VERSION;
+        final String server = name + " version " + KettingConstants.KETTING_VERSION;
         final String forge = "Forge version   " + KettingConstants.FORGE_VERSION;
+        final String bukkit = "Bukkit version  " + KettingConstants.BUKKIT_PACKAGE_VERSION;
         if (enableBigLogo) {
             System.out.println();
             for (int i = 0; i < bigLogo.length; i++) {
@@ -72,8 +72,8 @@ public class BetterUI {
         System.out.println(launcher);
         System.out.println(minecraft);
         System.out.println(server);
-        System.out.println(bukkit);
         System.out.println(forge);
+        System.out.println(bukkit);
         System.out.println(divider);
     }
 
