@@ -100,7 +100,7 @@ public class MCVersion {
                         I18n.logError("error.mc_version.manual_enter.too_many_attempts");
                         System.exit(1);
                     }
-                    I18n.logError("info.mc_version.manual_enter.invalid");
+                    I18n.logError("error.mc_version.manual_enter.invalid");
                     System.out.print(I18n.get("info.mc_version.manual_enter.prompt"));
                     continue;
                 }
