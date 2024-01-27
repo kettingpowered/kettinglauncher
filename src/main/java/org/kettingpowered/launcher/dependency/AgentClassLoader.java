@@ -1,6 +1,5 @@
 package org.kettingpowered.launcher.dependency;
 
-import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.lang.I18n;
 
 import java.net.URL;
@@ -19,7 +18,7 @@ public class AgentClassLoader extends URLClassLoader {
         if (super.findResource(name.replace('.', '/').concat(".class")) != null){
             c = super.findClass(name);
         }else {
-            if (Main.DEBUG) I18n.log("debug.classloader.delagating", name);
+            I18n.logDebug("debug.classloader.delagating", name);
             c = super.loadClass(name, resolve);
         }
         if (resolve) resolveClass(c);

@@ -15,7 +15,7 @@ public interface MavenInfo {
     File download() throws Exception;
     Dependency<? extends MavenInfo> downloadDependencyHash() throws Exception;
     static <T extends MavenInfo> Dependency<T> downloadDependencyHash(T mavenInfo) throws Exception{
-        if (Main.DEBUG) I18n.log("debug.maven.downloading_hash", mavenInfo);
+        I18n.logDebug("debug.maven.downloading_hash", mavenInfo);
         Hash deps = null;
         Path path = Objects.requireNonNull(mavenInfo.getPath().getParent());
         String fileName = mavenInfo.getFileNameWithExtenstion();
@@ -41,7 +41,7 @@ public interface MavenInfo {
             }
         }
         if (deps==null) throw exception;
-        if (Main.DEBUG) I18n.log("debug.maven.downloaded_hash", mavenInfo);
+        I18n.logDebug("debug.maven.downloaded_hash", mavenInfo);
         return new Dependency<>(deps, mavenInfo);
     }
 }

@@ -32,9 +32,6 @@ configurations {
     implementation {
         canBeResolved = true
     }
-    transitive {
-        extendsFrom(implementation)
-    }
 }
 
 dependencies {
@@ -42,8 +39,10 @@ dependencies {
     implementation 'org.kettingpowered:kettingcommon:2.3.2'
     implementation 'com.google.code.gson:gson:2.10.1' //Used in Patcher
     implementation 'me.tongfei:progressbar:0.10.0' //Used to display progress
-    transitive 'org.jline:jline-reader:3.21.0' //needed for progressbar
-    transitive 'org.jline:jline-terminal:3.21.0' //needed for progressbar
+    implementation 'org.kettingpowered:terminal-colors:1.0.2' //Used for progress bar, and terminal colors
+    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.19.0'
     implementation 'com.google.code.gson:gson:2.10.1'
 
     //Used in Processors
@@ -59,7 +58,7 @@ ext{
 }
 
 tasks.register('generateKettingLauncherLibraries', GenerateLibs) {
-    configuration = 'transitive'
+    configuration = 'implementation'
 }
 
 jar{

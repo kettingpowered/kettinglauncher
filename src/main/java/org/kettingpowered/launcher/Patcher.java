@@ -241,8 +241,10 @@ public class Patcher {
         final File NMSDir = new File(KettingFiles.NMS_BASE_DIR, mcVersion);
         final File SERVER_JAR = new File(NMSDir, "server-" + mcVersion + ".jar");
         boolean upToDate = hash.equals(HashUtils.getHash(SERVER_JAR, "SHA3-512"));
-        if (Main.DEBUG && upToDate) I18n.log("debug.patcher.upToDate.server");
-        if (Main.DEBUG && !upToDate) I18n.log("debug.patcher.notUpToDate.server");
+
+        if (upToDate) I18n.logDebug("debug.patcher.upToDate.server");
+        else I18n.logDebug("debug.patcher.notUpToDate.server");
+
         return !upToDate;
     }
     public static boolean checkUpdateNeededInstallerJson(String mcVersion, String forgeVersion, String kettingVersion, String hash, boolean updating) throws Exception {
@@ -260,8 +262,10 @@ public class Patcher {
         final File forgeServerDir = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, mcForgeKettingVersion);
         final File installJson = new File(forgeServerDir, "forge-" + mcForgeKettingVersion + "-installscript.json");
         boolean upToDate = hash.equals(HashUtils.getHash(installJson,"SHA3-512"));
-        if (Main.DEBUG && upToDate) I18n.log("debug.patcher.upToDate.installerJson");
-        if (Main.DEBUG && !upToDate) I18n.log("debug.patcher.notUpToDate.installerJson");
+
+        if (upToDate) I18n.logDebug("debug.patcher.upToDate.installerJson");
+        else I18n.logDebug("debug.patcher.notUpToDate.installerJson");
+
         return !upToDate;
     }
 

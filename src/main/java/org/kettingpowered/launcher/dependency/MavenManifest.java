@@ -1,7 +1,8 @@
 package org.kettingpowered.launcher.dependency;
 
-import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.lang.I18n;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -26,7 +27,7 @@ implements MavenInfo {
             list.add(versions.item(i).getFirstChild().getNodeValue());
             i++;
         }
-        if (Main.DEBUG) System.out.println(String.join("\n", list));
+        Logger.log(LogLevel.DEBUG, String.join("\n", list));
         return new ArrayList<>(list);
     }
 

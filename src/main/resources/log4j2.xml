@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Appenders>
+        <TerminalConsole name="Console">
+            <PatternLayout pattern="%highlight{%msg}%n%throwable" disableAnsi="false"/>
+        </TerminalConsole>
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

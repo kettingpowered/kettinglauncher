@@ -7,6 +7,9 @@ import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.lang.I18n;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
+import org.kettingpowered.launcher.log.impl.Log4jImpl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,7 +45,7 @@ public class Main {
 
     @SuppressWarnings("unused")
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
-        if (DEBUG) System.out.println("[Agent] premain lib load start");
+        Logger.log(LogLevel.DEBUG, "[Agent] premain lib load start");
 
         //Load language files
         I18n.load();
@@ -68,7 +71,7 @@ public class Main {
                     .invoke(null, dependencyList, inst);
         }
 
-        if (DEBUG) System.out.println("[Agent] premain lib load end");
+        Logger.log(LogLevel.DEBUG, "[Agent] premain lib load end");
     }
     
     @SuppressWarnings("unused")
@@ -162,6 +165,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws Throwable {
+        Logger.setImpl(new Log4jImpl());
+
         //these are used later in the patcher, to prevent us from loading excessive classes (which will fuck module definition/loading)
         try (BufferedReader stream = new BufferedReader(new InputStreamReader(Objects.requireNonNull(Main.class.getClassLoader().getResourceAsStream("data/launcher_libraries.txt"))))){
             libs.downloadExternal(

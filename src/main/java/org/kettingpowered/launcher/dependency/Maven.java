@@ -7,6 +7,8 @@ import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.lang.I18n;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
 
 import java.io.*;
 import java.net.URLConnection;
@@ -59,22 +61,22 @@ public final class Maven {
         if (dependencyFile.exists()) {
             if (hash == null) {
                 if (!dependencyFile.delete()) I18n.logError("error.maven.failed_to_delete_dep", info);
-                if (Main.DEBUG) I18n.log("debug.maven.re_downloading.empty_hash", info);
+                I18n.logDebug("debug.maven.re_downloading.empty_hash", info);
                 return true;
             }
 
             String fileHash = HashUtils.getHash(dependencyFile, hash.algorithm());
             if (fileHash.equals(hash.hash())) {
-                if (Main.DEBUG) I18n.log("debug.maven.dep_hash_match", info);
+                I18n.logDebug("debug.maven.dep_hash_match", info);
                 // This dependency is already downloaded & the hash matches
                 return false;
             } else {
-                if (Main.DEBUG) I18n.log("debug.maven.re_downloading.hash_mismatch", info, hash, fileHash);
+                I18n.logDebug("debug.maven.re_downloading.hash_mismatch", info, hash, fileHash);
                 if (!dependencyFile.delete()) I18n.logError("error.maven.failed_to_delete_dep", info);
                 return true;
             }
         }
-        if(Main.DEBUG) I18n.log("debug.maven.dep_not_found", dependencyFile.getAbsolutePath());
+        I18n.logDebug("debug.maven.dep_not_found", dependencyFile.getAbsolutePath());
         return true;
     }
 
@@ -90,7 +92,7 @@ public final class Maven {
         dependencyFile.createNewFile();
 
         RuntimeException failure = new RuntimeException(I18n.get("error.maven.all_repos_failed"));
-        if (Main.DEBUG) I18n.log("debug.maven.downloading_dep", maven);
+        I18n.logDebug("debug.maven.downloading_dep", maven);
         boolean anyFailures = false;
         for (String repository : AvailableMavenRepos.INSTANCE) {
             try {
@@ -102,12 +104,12 @@ public final class Maven {
                 //this is useful for downloading hashes itself
                 if (gothash != null && !hash.hash().equals(gothash)) {
                     final String errorMessage = I18n.get("error.maven.hash_mismatch", maven, gothash, hash.hash());
-                    if (ignoreHashError) System.err.println(errorMessage);
+                    if (ignoreHashError) Logger.log(LogLevel.ERROR, errorMessage);
                     else throw new RuntimeException(errorMessage);
                 }
 
                 // Success
-                if (Main.DEBUG) I18n.log("debug.maven.downloaded_dep", maven, repository);
+                I18n.logDebug("debug.maven.downloaded_dep", maven, repository);
                 return dependencyFile;
             } catch (Throwable e) {
                 //noinspection ResultOfMethodCallIgnored

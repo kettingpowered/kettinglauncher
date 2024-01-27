@@ -57,14 +57,14 @@ public class Libraries {
     
     private File downloadDep(Dependency<MavenArtifact> dep) {
         if (KettingLauncher.Bundled && KettingConstants.KETTINGSERVER_GROUP.equals(dep.maven().group())) {
-            if (Main.DEBUG) I18n.log("info.libraries.skip_bundled", dep);
+            I18n.logDebug("info.libraries.skip_bundled", dep);
             return Maven.getDependencyPath(dep.maven().getPath()).toFile().getAbsoluteFile();
         }
         File depFile;
         try{
             if (!KettingLauncher.Bundled && KettingLauncher.AUTO_UPDATE_LIBS.stream().anyMatch(artifact -> dep.maven().equalsIgnoringVersion(artifact))) {
                 MavenArtifact artifact = dep.maven().getLatestMinorPatch();
-                if (Main.DEBUG) I18n.log("info.libraries.using_different", artifact, dep.maven());
+                I18n.logDebug("info.libraries.using_different", artifact, dep.maven());
                 if (!artifact.equals(dep.maven())) depFile = artifact.download();
                 else depFile = dep.download();
             }else {

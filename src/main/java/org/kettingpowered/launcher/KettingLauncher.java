@@ -10,6 +10,8 @@ import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.info.MCVersion;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
 import org.kettingpowered.launcher.lang.I18n;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
 import org.kettingpowered.launcher.utils.FileUtils;
 
 import java.io.*;
@@ -61,7 +63,7 @@ public class KettingLauncher {
         Bundled_ForgeVersion = Bundled_ForgeVersion1;
         Bundled_McVersion = Bundled_McVersion1;
         Bundled = Bundled1;
-        if (Main.DEBUG && Bundled) I18n.log("debug.bundled.extra", Bundled_McVersion, Bundled_ForgeVersion, Bundled_KettingVersion);
+        if (Bundled) I18n.logDebug("debug.bundled.extra", Bundled_McVersion, Bundled_ForgeVersion, Bundled_KettingVersion);
     }
 
     public static final String ArtifactID = "kettinglauncher";
@@ -98,7 +100,7 @@ public class KettingLauncher {
      */
     public void init() throws Exception {
         final String mc_version;
-        if (Main.DEBUG && Bundled) I18n.log("debug.bundled");
+        if (Bundled) I18n.logDebug("debug.bundled");
 
         //Cache ketting versions
         final List<String> depVersions = new MavenManifest(KettingConstants.KETTINGSERVER_GROUP, Main.FORGE_SERVER_ARTIFACT_ID).getDepVersions();
@@ -203,7 +205,7 @@ public class KettingLauncher {
                 .map(mmp->mmp.convertMMP(Integer::parseInt))
                 .sorted()
                 .toList();
-        if(Main.DEBUG) System.out.println(launcherVersions.stream().map(MajorMinorPatchVersion::toString).collect(Collectors.joining("\n")));
+        Logger.log(LogLevel.DEBUG, launcherVersions.stream().map(MajorMinorPatchVersion::toString).collect(Collectors.joining("\n")));
         MajorMinorPatchVersion<Integer> version = MajorMinorPatchVersion.parse(Version).convertMMP(Integer::parseInt);
         final int index = launcherVersions.indexOf(version);
         if (index<0) I18n.logError("error.launcher.unrecognized_version");
@@ -238,10 +240,8 @@ public class KettingLauncher {
         {
             File[] kettingServerVersions = Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]);
     
-            if (Main.DEBUG) {
-                System.out.println(KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
-                System.out.println(Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
-            }
+            Logger.log(LogLevel.DEBUG, KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
+            Logger.log(LogLevel.DEBUG, Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
             
             needsDownload = versions.isEmpty();
@@ -261,10 +261,10 @@ public class KettingLauncher {
         // get the newest version
         if (args.enableServerUpdator() || needsDownload) {
             final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
-            if (Main.DEBUG) {
-                I18n.log("debug.launcher.available_server_versions");
-                System.out.println(String.join("\n", serverVersions));
-            }
+
+            I18n.logDebug("debug.launcher.available_server_versions");
+            Logger.log(LogLevel.DEBUG, String.join("\n", serverVersions));
+
             if (parsedServerVersions.isEmpty()) {
                 I18n.logError("error.launcher.no_server_version", mc_version);
                 System.exit(1);
@@ -272,7 +272,7 @@ public class KettingLauncher {
             serverVersion = parsedServerVersions.get(0);
         }
         if (Patcher.checkUpdateNeeded(mc_mmp.toString(), serverVersion.t1().toString(), serverVersion.t2().toString(), args.enableServerUpdator() || needsDownload)){
-            if (Main.DEBUG) I18n.log("debug.patcher.update");
+            I18n.logDebug("debug.patcher.update");
             //prematurely delete files to prevent errors
             FileUtils.deleteDir(KettingFiles.NMS_BASE_DIR);
             FileUtils.deleteDir(KettingFiles.KETTINGSERVER_BASE_DIR);
