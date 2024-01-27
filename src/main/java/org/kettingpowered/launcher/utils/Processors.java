@@ -2,7 +2,6 @@ package org.kettingpowered.launcher.utils;
 
 import org.kettingpowered.launcher.lang.I18n;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public final class Processors {

@@ -1,6 +1,5 @@
 package org.kettingpowered.launcher.dependency;
 
-import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.lang.I18n;
 
 import java.io.File;

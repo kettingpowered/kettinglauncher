@@ -5,7 +5,6 @@ import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.KettingLauncher;
-import org.kettingpowered.launcher.Main;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.lang.I18n;
 

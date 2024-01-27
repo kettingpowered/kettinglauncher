@@ -17,16 +17,8 @@ import org.kettingpowered.launcher.internal.utils.NetworkUtils;
 import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.utils.Processors;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
