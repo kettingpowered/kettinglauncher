@@ -13,6 +13,10 @@ public abstract class Logger {
         I18n.logDebug("logger.impl_changed", impl.getClass().getName());
     }
 
+    public static void marker(String marker, String message) {
+        impl._marker(marker.toUpperCase(), message);
+    }
+
     public static void log(String message) {
         log(LogLevel.INFO, message);
     }
@@ -39,4 +43,8 @@ public abstract class Logger {
     protected abstract void _log(LogLevel level, String message);
     protected abstract void _log(LogLevel level, String message, Object... args);
     protected abstract void _log(LogLevel level, String message, Throwable throwable);
+    protected void _marker(String marker, String message) {
+        //Default implementation does nothing
+        _log(LogLevel.INFO, message);
+    }
 }

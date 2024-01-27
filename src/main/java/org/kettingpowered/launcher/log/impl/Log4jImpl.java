@@ -1,6 +1,8 @@
 package org.kettingpowered.launcher.log.impl;
 
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.MarkerManager;
+import org.apache.logging.log4j.core.pattern.AnsiEscape;
 import org.kettingpowered.launcher.log.LogLevel;
 import org.kettingpowered.launcher.log.Logger;
 
@@ -18,5 +20,9 @@ public class Log4jImpl extends Logger {
 
     protected void _log(LogLevel level, String message, Throwable throwable) {
         LOGGER.log(level.toLog4jLevel(), message, throwable);
+    }
+
+    protected void _marker(String marker, String message) {
+        LOGGER.info(MarkerManager.getMarker(marker), message);
     }
 }

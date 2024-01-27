@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info">
     <Appenders>
+        <!-- See org.apache.logging.log4j.core.pattern.AnsiEscape for a list of ansi highlight colors -->
+        <TerminalConsole name="Logo">
+            <MarkerFilter marker="LOGO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%minecraftFormatting{%msg}%n%throwable" disableAnsi="false"/>
+        </TerminalConsole>
         <TerminalConsole name="Console">
-            <PatternLayout pattern="%highlight{%msg}%n%throwable" disableAnsi="false"/>
+            <MarkerFilter marker="LOGO" onMatch="DENY" onMismatch="ACCEPT"/>
+            <PatternLayout pattern="%highlight{%msg}{ERROR=red, WARN=yellow, INFO=green, DEBUG=blue}%n%throwable" disableAnsi="false"/>
         </TerminalConsole>
     </Appenders>
     <Loggers>
         <Root level="debug">
+            <AppenderRef ref="Logo"/>
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

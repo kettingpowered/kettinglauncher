@@ -2,6 +2,8 @@ package org.kettingpowered.launcher.betterui;
 
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.KettingLauncher;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -18,18 +20,20 @@ public class BetterUI {
             DIVIDER_LENGTH = 45;
     private boolean enabled = true,  enableBigLogo = true;
 
+    private static final String MC_COLOR_DARK_GRAY = "\u00A78";
+
     private static final String[] bigLogo = {
-            " /##   /##             /##     /##     /##                         ",
-            "| ##  /##/            | ##    | ##    |__/                         ",
-            "| ## /##/   /######  /###### /######   /## /#######   /######      ",
-            "| #####/   /##__  ##|_  ##_/|_  ##_/  | ##| ##__  ## /##__  ##     ",
-            "| ##  ##  | ########  | ##    | ##    | ##| ##  \\ ##| ##  \\ ##   ",
-            "| ##\\  ## | ##_____/  | ## /##| ## /##| ##| ##  | ##| ##  | ##    ",
-            "| ## \\  ##|  #######  |  ####/|  ####/| ##| ##  | ##|  #######    ",
-            "|__/  \\__/ \\_______/   \\___/   \\___/  |__/|__/  |__/ \\____  ##",
-            "                                                     /##  \\ ##    ",
-            "                                                    |  ######/     ",
-            "                                                     \\______/     "
+            MC_COLOR_DARK_GRAY + " /##   /##             /##     /##     /##                         ",
+            MC_COLOR_DARK_GRAY + "| ##  /##/            | ##    | ##    |__/                         ",
+            MC_COLOR_DARK_GRAY + "| ## /##/   /######  /###### /######   /## /#######   /######      ",
+            MC_COLOR_DARK_GRAY + "| #####/   /##__  ##|_  ##_/|_  ##_/  | ##| ##__  ## /##__  ##     ",
+            MC_COLOR_DARK_GRAY + "| ##  ##  | ########  | ##    | ##    | ##| ##  \\ ##| ##  \\ ##   ",
+            MC_COLOR_DARK_GRAY + "| ##\\  ## | ##_____/  | ## /##| ## /##| ##| ##  | ##| ##  | ##    ",
+            MC_COLOR_DARK_GRAY + "| ## \\  ##|  #######  |  ####/|  ####/| ##| ##  | ##|  #######    ",
+            MC_COLOR_DARK_GRAY + "|__/  \\__/ \\_______/   \\___/   \\___/  |__/|__/  |__/ \\____  ##",
+            MC_COLOR_DARK_GRAY + "                                                     /##  \\ ##    ",
+            MC_COLOR_DARK_GRAY + "                                                    |  ######/     ",
+            MC_COLOR_DARK_GRAY + "                                                     \\______/     "
     };
 
     private final String name;
@@ -54,7 +58,7 @@ public class BetterUI {
             System.out.println();
             for (int i = 0; i < bigLogo.length; i++) {
                 if (i < 9)
-                    System.out.println(bigLogo[i]);
+                    Logger.marker("logo", bigLogo[i]);
                 else {
                     if (i == 9)
                         printPartial(copyright, bigLogo[i]);
@@ -63,23 +67,23 @@ public class BetterUI {
                 }
             }
         } else {
-            System.out.println(name);
-            System.out.println(copyright);
-            System.out.println(divider);
+            Logger.marker("logo", name);
+            Logger.marker("logo", copyright);
+            Logger.marker("logo", divider);
         }
 
-        System.out.println(java);
-        System.out.println(launcher);
-        System.out.println(minecraft);
-        System.out.println(server);
-        System.out.println(forge);
-        System.out.println(bukkit);
-        System.out.println(divider);
+        Logger.marker("logo", java);
+        Logger.marker("logo", launcher);
+        Logger.marker("logo", minecraft);
+        Logger.marker("logo", server);
+        Logger.marker("logo", forge);
+        Logger.marker("logo", bukkit);
+        Logger.marker("logo", divider);
     }
 
     private static void printPartial(String s, String logo) {
         int l = Math.min(s.length(), DIVIDER_LENGTH);
-        System.out.println(s.substring(0, l) + logo.substring(l));
+        Logger.marker("logo", s.substring(0, l) + MC_COLOR_DARK_GRAY + logo.substring(l + MC_COLOR_DARK_GRAY.length()));
     }
 
     public boolean checkEula(Path path_to_eula) throws IOException {
@@ -90,7 +94,7 @@ public class BetterUI {
             return eula.hasAgreedToEULA();
 
         if (!eula.hasAgreedToEULA()) {
-            System.out.println("WARNING: It appears you have not agreed to the EULA.\nPlease read the EULA (https://www.minecraft.net/eula) and type 'yes' to continue.");
+            Logger.log(LogLevel.WARN, "WARNING: It appears you have not agreed to the EULA.\nPlease read the EULA (https://www.minecraft.net/eula) and type 'yes' to continue.");
             System.out.print("Do you accept? (yes/no): ");
 
             int wrong = 0;
@@ -100,10 +104,10 @@ public class BetterUI {
                 String answer = console.nextLine();
                 if (answer == null || answer.isBlank()) {
                     if (wrong++ >= 2) {
-                        System.err.println("You have typed the wrong answer too many times. Exiting.");
+                        Logger.log(LogLevel.ERROR, "You have typed the wrong answer too many times. Exiting.");
                         return false;
                     }
-                    System.out.println("Please type 'yes' or 'no'.");
+                    Logger.log(LogLevel.WARN, "Please type 'yes' or 'no'.");
                     System.out.print("Do you accept? (yes/no): ");
                     continue;
                 }
@@ -120,15 +124,15 @@ public class BetterUI {
                         return true;
                     }
                     case "n", "no" -> {
-                        System.err.println("You must accept the EULA to continue. Exiting.");
+                        Logger.log(LogLevel.ERROR, "You must accept the EULA to continue. Exiting.");
                         return false;
                     }
                     default -> {
                         if (wrong++ >= 2) {
-                            System.err.println("You have typed the wrong answer too many times. Exiting.");
+                            Logger.log(LogLevel.ERROR, "You have typed the wrong answer too many times. Exiting.");
                             return false;
                         }
-                        System.out.println("Please type 'yes' or 'no'.");
+                        Logger.log(LogLevel.WARN, "Please type 'yes' or 'no'.");
                         System.out.print("Do you accept? (yes/no): ");
                     }
                 }
