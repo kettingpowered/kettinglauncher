@@ -4,6 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.launcher.betterui.BetterUI;
+import org.kettingpowered.launcher.log.LogLevel;
+import org.kettingpowered.launcher.log.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +49,10 @@ public class Args {
         @Nullable String forgeVersion = getArg("-forgeVersion");
         @Nullable String kettingVersion = getArg("-kettingVersion");
         //backward compatibility
-        if (minecraftVersion == null) minecraftVersion = getArg("-minecraftVersion");
+        if (minecraftVersion == null) {
+            minecraftVersion = getArg("-minecraftVersion");
+            if (minecraftVersion != null) Logger.log(LogLevel.WARN, "warn.discontinued.double_dash_minecraftVersion");
+        }
         return new ParsedArgs(Collections.unmodifiableList(args), installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion, forgeVersion, kettingVersion);
     }
     
