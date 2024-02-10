@@ -242,8 +242,12 @@ public class KettingLauncher {
     
             Logger.log(LogLevel.DEBUG, KettingFiles.KETTINGSERVER_FORGE_DIR.getAbsolutePath());
             Logger.log(LogLevel.DEBUG, Arrays.stream(kettingServerVersions).map(File::getName).collect(Collectors.joining("\n")));
-            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions = MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions).map(File::getName)).getOrDefault(mc_mmp, new ArrayList<>());
-            
+            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions =
+                    filterKettingVersions(
+                        MajorMinorPatchVersion.parseKettingServerVersionList(Arrays.stream(kettingServerVersions)
+                                .map(File::getName))
+                                .getOrDefault(mc_mmp, new ArrayList<>())
+                    );
             needsDownload = versions.isEmpty();
             if(needsDownload) FileUtils.deleteDir(KettingFiles.KETTINGSERVER_FORGE_DIR); //we have multiple ketting versions, but 0 that match the requested minecraft version.
             else if(versions.size() > 1) {
@@ -260,10 +264,19 @@ public class KettingLauncher {
         if (needsDownload) I18n.log("info.launcher.server_download", mc_version);
         // get the newest version
         if (args.enableServerUpdator() || needsDownload) {
-            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream()).getOrDefault(mc_mmp, new ArrayList<>());
+            final List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> parsedServerVersions = 
+                    filterKettingVersions(
+                        MajorMinorPatchVersion.parseKettingServerVersionList(serverVersions.stream())
+                                .getOrDefault(mc_mmp, new ArrayList<>())
+                    );
 
             I18n.logDebug("debug.launcher.available_server_versions");
-            Logger.log(LogLevel.DEBUG, String.join("\n", serverVersions));
+            Logger.log(
+                    LogLevel.DEBUG,
+                    parsedServerVersions.stream()
+                        .map(tuple -> String.format("Minecraft: %s, Forge: %s, Ketting: %s", mc_mmp, tuple.t1(), tuple.t2()))
+                        .collect(Collectors.joining("\n"))
+            );
 
             if (parsedServerVersions.isEmpty()) {
                 I18n.logError("error.launcher.no_server_version", mc_version);
@@ -313,6 +326,23 @@ public class KettingLauncher {
                 throw exception;
             }
         }
+    }
+    
+    List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> filterKettingVersions(List<Tuple<MajorMinorPatchVersion<Integer>, MajorMinorPatchVersion<Integer>>> versions) {
+        @Nullable MajorMinorPatchVersion<Integer> kettingVersion = Optional.ofNullable(args.kettingVersion())
+                .map(MajorMinorPatchVersion::parse)
+                .map(item -> item.convertMMP(Integer::parseInt))
+                .orElse(null);
+        @Nullable MajorMinorPatchVersion<Integer> forgeVersion = Optional.ofNullable(args.forgeVersion())
+                .map(MajorMinorPatchVersion::parse)
+                .map(item -> item.convertMMP(Integer::parseInt))
+                .orElse(null);
+        return versions.stream().filter(version -> {
+            if (kettingVersion != null && !kettingVersion.equals(version.t2()) ) return false;
+            //noinspection RedundantIfStatement
+            if (forgeVersion != null && !forgeVersion.equals(version.t1()) ) return false;
+            return true;
+        }).toList();
     }
 
     void prepareLaunch() throws Exception {

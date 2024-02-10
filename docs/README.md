@@ -42,20 +42,31 @@ Ketting Launcher is an all-in-one launcher for all Ketting versions. This can es
 
 These arguments are subject to change, and may not work in future versions. For a full list of arguments, run the launcher with `-help`
 
-| Argument                        | Description                                                                             |
-|---------------------------------|-----------------------------------------------------------------------------------------|
-| `-help`                         | Shows the help menu                                                                     |
-| `-noui`                         | Disables the fancy UI                                                                   |
-| `-nologo`                       | Disables the big logo                                                                   |
-| `-accepteula`                   | Accepts the EULA automatically                                                          |
-| `-dau or -daus`                 | Disables automatic server updates                                                       |
-| `-daul`                         | Disables automatic launcher updates                                                     |
-| `-installOnly`                  | Only installs the server and exits after                                                |
-| `-minecraftVersion <version>`   | Sets the Minecraft version to use (if Ketting supports it)                              |
+| Argument                              | Description                              |
+|---------------------------------------|------------------------------------------|
+| `-help`                               | Shows the help menu                      |
+| `-noui`                               | Disables the fancy UI                    |
+| `-nologo`                             | Disables the big logo                    |
+| `-accepteula`                         | Accepts the EULA automatically           |
+| `-dau or -daus`                       | Disables automatic server updates        |
+| `-daul`                               | Disables automatic launcher updates      |
+| `-installOnly`                        | Only installs the server and exits after |
+| `-minecraftVersion <version>`[^1]     | Sets the Minecraft version to use        |
+| `-forgeVersion <version>`[^1], [^2]   | Sets the Forge version to use            |
+| `-kettingVersion <version>`[^1], [^2] | Sets the Ketting version to use          |
 
 | Unstable arguments:       | Description                                                                             |
 |---------------------------|-----------------------------------------------------------------------------------------|
 | `--launchTarget <target>` | Sets the forge launch target, this should not be used unless you know what you're doing |
+
+All args above can also be set by setting environment variables or jvm Properties.
+Let `x` be an arbitrary argument from the above lists, with the character `-` removed (e.g. `-dau` becomes `dau`). 
+The corresponding Environment Variable to that argument would be: `kettinglauncher_` followed by `x` (e.g. `kettinglauncher_dau` in case of the earlier example).
+The corresponding jvm Property to that argument would be: `kettinglauncher.` followed by `x` (e.g. `kettinglauncher.dau` in case of the earlier example).
+
+There is also the jvm Property `kettinglauncher.debug`.
+That cannot be set any other way, due to java limitations and how the launcher is laid out.
+We do not recommend activating that, since it activates a ton of extra information, that is most of the time useless.
 
 ### What if my I don't know how / my hosting provider does not allow me to use arguments?
 
@@ -80,3 +91,7 @@ Make sure that the bug is not already reported on the [issue tracker][issues]. I
 ### I have a question that is not listed here, what do I do?
 
 Feel free to join our [Discord server][discord-invite] and ask your question there.
+
+[^1]: only if Ketting supports it
+
+[^2]: This argument will not update the Minecraft Version. If the current Server Minecraft Version is detected to be `1.20.1`, but e.g. `forgeVersion` is set to `48.1.0`, it won't update to `1.20.2`.
