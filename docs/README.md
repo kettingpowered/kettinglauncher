@@ -42,18 +42,18 @@ Ketting Launcher is an all-in-one launcher for all Ketting versions. This can es
 
 These arguments are subject to change, and may not work in future versions. For a full list of arguments, run the launcher with `-help`
 
-| Argument                              | Description                              |
-|---------------------------------------|------------------------------------------|
-| `-help`                               | Shows the help menu                      |
-| `-noui`                               | Disables the fancy UI                    |
-| `-nologo`                             | Disables the big logo                    |
-| `-accepteula`                         | Accepts the EULA automatically           |
-| `-dau or -daus`                       | Disables automatic server updates        |
-| `-daul`                               | Disables automatic launcher updates      |
-| `-installOnly`                        | Only installs the server and exits after |
-| `-minecraftVersion <version>`[^1]     | Sets the Minecraft version to use        |
-| `-forgeVersion <version>`[^1], [^2]   | Sets the Forge version to use            |
-| `-kettingVersion <version>`[^1], [^2] | Sets the Ketting version to use          |
+| Argument                      | Description                                |
+|-------------------------------|--------------------------------------------|
+| `-help`                       | Shows the help menu                        |
+| `-noui`                       | Disables the fancy UI                      |
+| `-nologo`                     | Disables the big logo                      |
+| `-accepteula`                 | Accepts the EULA automatically             |
+| `-dau or -daus`               | Disables automatic server updates          |
+| `-daul`                       | Disables automatic launcher updates        |
+| `-installOnly`                | Only installs the server and exits after   |
+| `-minecraftVersion <version>` | Sets the Minecraft version to use [^1]     |
+| `-forgeVersion <version>`     | Sets the Forge version to use [^1], [^2]   |
+| `-kettingVersion <version>`   | Sets the Ketting version to use [^1], [^2] |
 
 | Unstable arguments:       | Description                                                                             |
 |---------------------------|-----------------------------------------------------------------------------------------|
