@@ -197,6 +197,7 @@ public class Main {
             // because this will mark other packages as loaded by this module (which will fuck with declaring/loading modules) 
             JavaHacks.loadExternalFileSystems(KettingLauncher.class.getClassLoader()); 
             List<String> launchArgs = new ArrayList<>(defaultArgs[1]);
+            launchArgs.addAll(launcher.args.args());
 
             I18n.log("info.launcher.launching");
 
