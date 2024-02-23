@@ -224,6 +224,7 @@ public class Main {
     private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries , String main) throws IOException {
         switch (main) {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
+                System.setProperty("java.class.path", getClassPath(libraries).collect(Collectors.joining(File.pathSeparator)));
                 //noinspection unchecked
                 return new List[] {
                     Arrays.asList(
