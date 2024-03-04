@@ -10,6 +10,7 @@ import org.kettingpowered.launcher.lang.I18n;
 import org.kettingpowered.launcher.log.LogLevel;
 import org.kettingpowered.launcher.log.Logger;
 import org.kettingpowered.launcher.log.impl.Log4jImpl;
+import org.kettingpowered.launcher.log.impl.SysoutImpl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -200,6 +201,9 @@ public class Main {
             launchArgs.addAll(launcher.args.args());
 
             I18n.log("info.launcher.launching");
+
+            //use default logging implementation when launching
+            Logger.setImpl(new SysoutImpl());
 
             Class.forName(launchClass, true, Main.class.getClassLoader())
                     .getDeclaredMethod("main", String[].class)
