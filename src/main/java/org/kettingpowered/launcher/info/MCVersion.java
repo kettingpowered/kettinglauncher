@@ -21,7 +21,7 @@ public class MCVersion {
 
         //Check for a mcversion.txt file, this has priority
         {
-            File mcversion = new File(KettingFiles.MAIN_FOLDER_FILE, "mcversion.txt");
+            File mcversion = new File(KettingFiles.LAUNCH_DIR, "mcversion.txt");
             if (mcversion.exists()){
                 try {
                     String version = readFromIS(new FileInputStream(mcversion));

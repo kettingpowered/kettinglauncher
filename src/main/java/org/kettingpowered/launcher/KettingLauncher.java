@@ -81,7 +81,7 @@ public class KettingLauncher {
     );
     
 
-    private final Path eula = new File(KettingFiles.MAIN_FOLDER_FILE, "eula.txt").toPath();
+    private final Path eula = KettingFiles.SERVER_EULA.toPath();
     final ParsedArgs args;
     private final BetterUI ui;
     final Libraries libs = new Libraries();

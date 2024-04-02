@@ -36,7 +36,7 @@ configurations {
 
 dependencies {
     compileOnly 'org.jetbrains:annotations:24.0.0'
-    implementation 'org.kettingpowered:kettingcommon:2.3.2'
+    implementation 'org.kettingpowered:kettingcommon:2.3.3'
     implementation 'com.google.code.gson:gson:2.10.1' //Used in Patcher
     implementation 'me.tongfei:progressbar:0.10.0' //Used to display progress
     implementation 'org.kettingpowered:terminal-colors:1.0.2' //Used for progress bar, and terminal colors

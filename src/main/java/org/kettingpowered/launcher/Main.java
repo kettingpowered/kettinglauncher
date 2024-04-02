@@ -221,7 +221,7 @@ public class Main {
                 return null;
             }
         }).filter(Objects::nonNull)
-        .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
+        .map(dep->KettingFiles.SERVER_JAR_DIR.toPath().relativize(new File(dep).toPath()).toString())
         .map(str->str.replace(File.separatorChar, '/'))//thanks windows
         .filter(str -> !str.isBlank());
     }
@@ -243,7 +243,7 @@ public class Main {
                                             return null;
                                         }
                                     }).filter(Objects::nonNull)
-                                    .map(dep->KettingFiles.MAIN_FOLDER_FILE.toPath().relativize(new File(dep).toPath()).toString())
+                                    .map(dep->KettingFiles.SERVER_JAR_DIR.toPath().relativize(new File(dep).toPath()).toString())
                                     .map(str->str.replace(File.separatorChar, '/'))//thanks windows
                                     .collect(Collectors.joining(File.pathSeparator)),
                             "--add-modules ALL-MODULE-PATH",
