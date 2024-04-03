@@ -10,6 +10,7 @@ import me.tongfei.progressbar.ProgressBarStyle;
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.ketting.internal.Type;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.dependency.*;
 import org.kettingpowered.launcher.internal.utils.HashUtils;
@@ -86,7 +87,15 @@ public class Patcher {
     }
 
     private void readInstallScript() {
-        try(FileReader reader = new FileReader(KettingFileVersioned.FORGE_INSTALL_JSON)){
+        File installJsonFile;
+        if (KettingConstants.TYPE == Type.Forge) {
+            installJsonFile = KettingFileVersioned.FORGE_INSTALL_JSON;
+        }else if (KettingConstants.TYPE == Type.NeoForge) {
+            installJsonFile = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
+        }else {
+            throw new RuntimeException("Unsupported Type");
+        }
+        try(FileReader reader = new FileReader(installJsonFile)){
             final JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
             JsonArray rawProcessors = object.getAsJsonArray("processors");
     

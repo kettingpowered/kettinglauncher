@@ -4,6 +4,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.ketting.internal.Type;
 import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.betterui.BetterUI;
 import org.kettingpowered.launcher.lang.I18n;
@@ -78,10 +79,12 @@ public class Libraries {
     public static void downloadMcp() throws Exception {
         String mcMcp = KettingConstants.MINECRAFT_VERSION + "-" + KettingConstants.MCP_VERSION;
         MavenArtifact mcp_artifact;
-        if (true) { // TODO: Make a check for this
+        if (KettingConstants.TYPE == Type.Forge) {
             mcp_artifact = new MavenArtifact("de.oceanlabs.mcp", "mcp_config", mcMcp, Optional.empty(), Optional.of("zip"));
-        } else {
+        } else if (KettingConstants.TYPE == Type.NeoForge) {
             mcp_artifact = new MavenArtifact("net.neoforged", "neoform", mcMcp, Optional.empty(), Optional.of("zip"));
+        } else{
+            throw new RuntimeException("Unsupported Type.");
         }
         
         mcp_artifact.download();

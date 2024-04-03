@@ -35,11 +35,13 @@ public class KettingLauncher {
     @Nullable private static final String Bundled_McVersion;
     @Nullable private static final String Bundled_ForgeVersion;
     @Nullable private static final String Bundled_KettingVersion;
+    @Nullable private static final Type Bundled_Type;
 
     static {
         String Bundled_KettingVersion1 = null;
         String Bundled_ForgeVersion1 = null;
         String Bundled_McVersion1 = null;
+        Type Bundled_Type1 = null;
         boolean Bundled1 = false;
 
         
@@ -53,6 +55,13 @@ public class KettingLauncher {
                     Bundled_McVersion1 = attr.getValue("MinecraftVersion");
                     Bundled_ForgeVersion1 = attr.getValue("ForgeVersion");
                     Bundled_KettingVersion1 = attr.getValue("KettingVersion");
+                    String type = attr.getValue("Type");
+                    if (type != null)
+                        try {
+                            Bundled_Type1 = Type.valueOf(type);
+                        } catch (IllegalArgumentException e){
+                            Logger.log(LogLevel.INFO, "Cannot get Bundled Type", e);
+                        }
                 } catch (IOException ignored){}
             }
         } catch (IOException e) {
@@ -62,6 +71,7 @@ public class KettingLauncher {
         Bundled_KettingVersion = Bundled_KettingVersion1;
         Bundled_ForgeVersion = Bundled_ForgeVersion1;
         Bundled_McVersion = Bundled_McVersion1;
+        Bundled_Type = Bundled_Type1;
         Bundled = Bundled1;
         if (Bundled) I18n.logDebug("debug.bundled.extra", Bundled_McVersion, Bundled_ForgeVersion, Bundled_KettingVersion);
     }
@@ -136,7 +146,7 @@ public class KettingLauncher {
         boolean failed = false;
         final String version = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
         deleteOtherVersions(version);
-        if (true) { // TODO: Detect is Forge or NeoForge
+        if (Bundled_Type == Type.Forge) {
             for (final String prefix : new String[]{"fmlloader", "fmlcore", "javafmllanguage", "lowcodelanguage", "mclanguage"}) {
                 final String fileName = prefix + "-" + version + ".jar";
                 final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
@@ -148,8 +158,18 @@ public class KettingLauncher {
                 }
             }
         }
-        final String fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
-        final File folder = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, version);
+        final String fileName;
+        final File folder;
+        if (Bundled_Type == Type.Forge) {
+            fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
+            folder = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, version);
+        }else if (Bundled_Type == Type.NeoForge) {
+            fileName = Main.NEOFORGE_SERVER_ARTIFACT_ID+"-"+version;
+            folder = new File(KettingFiles.KETTINGSERVER_NEOFORGE_DIR, version);
+        }else {
+            throw new RuntimeException("Unsupported Type");
+        }
+
         try{
             extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
         } catch (IOException e) {
@@ -162,10 +182,10 @@ public class KettingLauncher {
             failed=true;
             exception.addSuppressed(e);
         }
-        try{
-            extractJarContent(KettingFiles.DATA_DIR+fileName+"-installscript.json", new File(folder, fileName+"-installscript.json"));
+        try {
+            extractJarContent(KettingFiles.DATA_DIR + fileName + "-installscript.json", new File(folder, fileName + "-installscript.json"));
         } catch (IOException e) {
-            failed=true;
+            failed = true;
             exception.addSuppressed(e);
         }
         try{
@@ -359,7 +379,14 @@ public class KettingLauncher {
         downloadMCP.setName("Download-MCP");
         downloadMCP.start();
         {
-            try (BufferedReader stream = new BufferedReader(new FileReader(KettingFileVersioned.FORGE_KETTING_LIBS))) {
+            File libsFile;
+            if(KettingConstants.TYPE == Type.Forge)
+                libsFile = KettingFileVersioned.FORGE_KETTING_LIBS;
+            else if (KettingConstants.TYPE == Type.NeoForge)
+                libsFile = KettingFileVersioned.NEOFORGE_KETTING_LIBS;
+            else throw new RuntimeException("Unsupported Type");
+
+            try (BufferedReader stream = new BufferedReader(new FileReader(libsFile))) {
                 libs.downloadExternal(
                         stream.lines()
                                 .map(Dependency::parse)

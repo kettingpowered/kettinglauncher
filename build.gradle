@@ -21,7 +21,7 @@ repositories {
     maven { url = 'https://nexus.c0d3m4513r.com/repository/Ketting/' }
     maven { url = 'https://nexus.c0d3m4513r.com/repository/Forge/' }
     maven { url = 'https://maven.neoforged.net/'}
-//    mavenLocal()
+    mavenLocal()
 }
 
 java {
@@ -37,7 +37,7 @@ configurations {
 
 dependencies {
     compileOnly 'org.jetbrains:annotations:24.0.0'
-    implementation 'org.kettingpowered:kettingcommon:2.3.3'
+    implementation 'org.kettingpowered:kettingcommon:69.420.0'
     implementation 'com.google.code.gson:gson:2.10.1' //Used in Patcher
     implementation 'me.tongfei:progressbar:0.10.0' //Used to display progress
     implementation 'org.kettingpowered:terminal-colors:1.0.2' //Used for progress bar, and terminal colors

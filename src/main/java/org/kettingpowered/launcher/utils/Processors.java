@@ -1,5 +1,7 @@
 package org.kettingpowered.launcher.utils;
 
+import org.kettingpowered.ketting.internal.KettingConstants;
+import org.kettingpowered.ketting.internal.Type;
 import org.kettingpowered.launcher.lang.I18n;
 
 import java.lang.reflect.InvocationTargetException;
@@ -10,10 +12,12 @@ public final class Processors {
         processor = processor.split(":")[1];
 
         String packageName;
-        if (true) { // TODO: Detect is NeoForge or Forge
+        if (KettingConstants.TYPE == Type.Forge) {
             packageName = "net.minecraftforge.";
-        } else {
+        } else if (KettingConstants.TYPE == Type.NeoForge) {
             packageName = "net.neoforged.";
+        } else{
+            throw new RuntimeException("Unsupported Type");
         }
         
         switch (processor) {
