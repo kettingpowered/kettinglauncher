@@ -11,14 +11,7 @@ public final class Processors {
     public static void execute(ClassLoader cl, String processor, String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         processor = processor.split(":")[1];
 
-        String packageName;
-        if (KettingConstants.TYPE == Type.Forge) {
-            packageName = "net.minecraftforge.";
-        } else if (KettingConstants.TYPE == Type.NeoForge) {
-            packageName = "net.neoforged.";
-        } else{
-            throw new RuntimeException("Unsupported Type");
-        }
+        String packageName = KettingConstants.TYPE.pkgOrThrow();
         
         switch (processor) {
             case "binarypatcher":
