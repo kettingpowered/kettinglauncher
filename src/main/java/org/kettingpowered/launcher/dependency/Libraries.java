@@ -77,7 +77,13 @@ public class Libraries {
 
     public static void downloadMcp() throws Exception {
         String mcMcp = KettingConstants.MINECRAFT_VERSION + "-" + KettingConstants.MCP_VERSION;
-        MavenArtifact mcp_artifact = new MavenArtifact("de.oceanlabs.mcp", "mcp_config", mcMcp, Optional.empty(), Optional.of("zip"));
+        MavenArtifact mcp_artifact;
+        if (true) { // TODO: Make a check for this
+            mcp_artifact = new MavenArtifact("de.oceanlabs.mcp", "mcp_config", mcMcp, Optional.empty(), Optional.of("zip"));
+        } else {
+            mcp_artifact = new MavenArtifact("net.neoforged", "neoform", mcMcp, Optional.empty(), Optional.of("zip"));
+        }
+        
         mcp_artifact.download();
     }
 

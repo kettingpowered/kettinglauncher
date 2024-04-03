@@ -17,6 +17,7 @@ public final class AvailableMavenRepos {
         instance.add("https://repo1.maven.org/maven2/");
         instance.add("https://libraries.minecraft.net/");
         instance.add("https://maven.minecraftforge.net/");
+        instance.add("https://maven.neoforged.net/");
         INSTANCE = Collections.unmodifiableList(instance);
     }
     public static final List<String> INSTANCE;

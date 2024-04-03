@@ -136,14 +136,16 @@ public class KettingLauncher {
         boolean failed = false;
         final String version = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
         deleteOtherVersions(version);
-        for(final String prefix : new String[]{"fmlloader", "fmlcore", "javafmllanguage", "lowcodelanguage", "mclanguage"}){
-            final String fileName = prefix+"-"+version + ".jar";
-            final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
-            try {
-                extractJarContent(KettingFiles.DATA_DIR+fileName, file);
-            } catch (IOException e) {
-                failed=true;
-                exception.addSuppressed(e);
+        if (true) { // TODO: Detect is Forge or NeoForge
+            for (final String prefix : new String[]{"fmlloader", "fmlcore", "javafmllanguage", "lowcodelanguage", "mclanguage"}) {
+                final String fileName = prefix + "-" + version + ".jar";
+                final File file = new File(KettingFiles.KETTINGSERVER_BASE_DIR, String.format("%s/%s/%s", prefix, version, fileName));
+                try {
+                    extractJarContent(KettingFiles.DATA_DIR + fileName, file);
+                } catch (IOException e) {
+                    failed = true;
+                    exception.addSuppressed(e);
+                }
             }
         }
         final String fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
