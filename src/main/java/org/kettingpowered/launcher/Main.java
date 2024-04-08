@@ -258,8 +258,6 @@ public class Main {
                             "2.0.17", // We need to get it
                             "--fml.mcVersion",
                             KettingConstants.MINECRAFT_VERSION,
-                            "--neoforge.group", // TODO: I don't kwow what is this argument in NeoForge
-                            "org.kettingpowered.server",
                             "--fml.neoFormVersion",
                             KettingConstants.MCP_VERSION
                     );
