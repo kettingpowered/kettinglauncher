@@ -435,7 +435,7 @@ public class KettingLauncher {
         
         MajorMinorPatchVersion<Integer> mc = MajorMinorPatchVersion.parse(KettingConstants.MINECRAFT_VERSION).convertMMP(Integer::parseInt);
         
-        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,2, null)) <=0 ){
+        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,2, null)) <=0 || Bundled_Type == Type.NeoForge){
             try {
                 Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, cl);
                 return "cpw.mods.bootstraplauncher.BootstrapLauncher";

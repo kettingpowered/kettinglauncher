@@ -124,7 +124,15 @@ public class Patcher {
         tokens.put("{MC_SLIM}", KettingFileVersioned.SERVER_SLIM.getAbsolutePath());
         tokens.put("{MC_EXTRA}", KettingFileVersioned.SERVER_EXTRA.getAbsolutePath());
         tokens.put("{MC_SRG}", KettingFileVersioned.SERVER_SRG.getAbsolutePath());
-        tokens.put("{PATCHED}", KettingFileVersioned.FORGE_PATCHED_JAR.getAbsolutePath());
+        File patchedJar;
+        if (KettingConstants.TYPE == Type.Forge) {
+            patchedJar = KettingFileVersioned.FORGE_INSTALL_JSON;
+        }else if (KettingConstants.TYPE == Type.NeoForge) {
+            patchedJar = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
+        }else {
+            throw new RuntimeException("Unsupported Type");
+        }
+        tokens.put("{PATCHED}", patchedJar.getAbsolutePath());
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
 
@@ -174,6 +182,12 @@ public class Patcher {
                         return;
                     }
 
+                    if (argString.startsWith("[net.neoforged:neoform:")) {
+                        argString = KettingFileVersioned.NEOFORM_MCP_ZIP.getAbsolutePath();
+                        parsedArgs.add(argString);
+                        return;
+                    }
+
                     for (Map.Entry<String, String> token : tokens.entrySet()) {
                         if (argString.equals(token.getKey())) {
                             argString = argString.replace(token.getKey(), token.getValue());
@@ -203,10 +217,19 @@ public class Patcher {
         writeStoredHashes();
     }
     private static void writeStoredHashes() throws IOException, NoSuchAlgorithmException {
+        File installJson;
+        if (KettingConstants.TYPE == Type.Forge) {
+            installJson = KettingFileVersioned.FORGE_INSTALL_JSON;
+        }else if (KettingConstants.TYPE == Type.NeoForge) {
+            installJson = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
+        }else {
+            throw new RuntimeException("Unsupported Type");
+        }
+        
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(KettingFiles.STORED_HASHES))){
             writer
                     .append("installJson=")
-                    .append(HashUtils.getHash(KettingFileVersioned.FORGE_INSTALL_JSON, "SHA3-512"))
+                    .append(HashUtils.getHash(installJson, "SHA3-512"))
                     .append("\nserverLzma=")
                     .append(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"))
                     .append("\nserver=")
