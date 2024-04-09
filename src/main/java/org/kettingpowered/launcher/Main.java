@@ -38,6 +38,7 @@ public class Main {
     public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
     public static final String FORGE_SERVER_ARTIFACT_ID = "forge";
     public static final String NEOFORGE_SERVER_ARTIFACT_ID = "neoforge";
+    public static String NEOFORGE_FML_VERSION = "null";
     //This is used in a premain context in LibHelper, where KettingCommon might not be available yet.
     //Java is VERY nice however and inlines this at compile-time, saving us the trouble of defining this twice.
     //This will only pull the INSTALLER_LIBRARIES_FOLDER from the compileTime KettingConstants version.
@@ -255,7 +256,7 @@ public class Main {
                             "--fml.neoForgeVersion",
                             KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
                             "--fml.fmlVersion",
-                            "2.0.17", // We need to get it
+                            NEOFORGE_FML_VERSION,
                             "--fml.mcVersion",
                             KettingConstants.MINECRAFT_VERSION,
                             "--fml.neoFormVersion",

@@ -55,6 +55,7 @@ public class KettingLauncher {
                     Bundled_McVersion1 = attr.getValue("MinecraftVersion");
                     Bundled_ForgeVersion1 = attr.getValue("ForgeVersion");
                     Bundled_KettingVersion1 = attr.getValue("KettingVersion");
+                    Main.NEOFORGE_FML_VERSION = attr.getValue("fmlVersion");
                     String type = attr.getValue("Type");
                     if (type != null)
                         try {
