@@ -201,19 +201,10 @@ public class Patcher {
         writeStoredHashes();
     }
     private static void writeStoredHashes() throws IOException, NoSuchAlgorithmException {
-        File installJson;
-        if (KettingConstants.TYPE == Type.Forge) {
-            installJson = KettingFileVersioned.FORGE_INSTALL_JSON;
-        }else if (KettingConstants.TYPE == Type.NeoForge) {
-            installJson = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
-        }else {
-            throw new RuntimeException("Unsupported Type");
-        }
-        
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(KettingFiles.STORED_HASHES))){
             writer
                     .append("installJson=")
-                    .append(HashUtils.getHash(installJson, "SHA3-512"))
+                    .append(HashUtils.getHash(KettingConstants.TYPE.installJsonOrThrow(), "SHA3-512"))
                     .append("\nserverLzma=")
                     .append(HashUtils.getHash(KettingFiles.SERVER_LZMA, "SHA3-512"))
                     .append("\nserver=")
