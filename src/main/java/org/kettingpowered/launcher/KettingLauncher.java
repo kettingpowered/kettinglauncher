@@ -158,18 +158,8 @@ public class KettingLauncher {
                 }
             }
         }
-        final String fileName;
-        final File folder;
-        if (Bundled_Type == Type.Forge) {
-            fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
-            folder = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, version);
-        }else if (Bundled_Type == Type.NeoForge) {
-            fileName = Main.NEOFORGE_SERVER_ARTIFACT_ID+"-"+version;
-            folder = new File(KettingFiles.KETTINGSERVER_NEOFORGE_DIR, version);
-        }else {
-            throw new RuntimeException("Unsupported Type");
-        }
-
+        final String fileName = Bundled_Type.typeOrThrow()+"-"+version;
+        final File folder = Bundled_Type.installDirOrThrow();
         try{
             extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
         } catch (IOException e) {

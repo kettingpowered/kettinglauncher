@@ -87,15 +87,7 @@ public class Patcher {
     }
 
     private void readInstallScript() {
-        File installJsonFile;
-        if (KettingConstants.TYPE == Type.Forge) {
-            installJsonFile = KettingFileVersioned.FORGE_INSTALL_JSON;
-        }else if (KettingConstants.TYPE == Type.NeoForge) {
-            installJsonFile = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
-        }else {
-            throw new RuntimeException("Unsupported Type");
-        }
-        try(FileReader reader = new FileReader(installJsonFile)){
+        try(FileReader reader = new FileReader(KettingConstants.TYPE.installJsonOrThrow())){
             final JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
             JsonArray rawProcessors = object.getAsJsonArray("processors");
     
@@ -124,15 +116,7 @@ public class Patcher {
         tokens.put("{MC_SLIM}", KettingFileVersioned.SERVER_SLIM.getAbsolutePath());
         tokens.put("{MC_EXTRA}", KettingFileVersioned.SERVER_EXTRA.getAbsolutePath());
         tokens.put("{MC_SRG}", KettingFileVersioned.SERVER_SRG.getAbsolutePath());
-        File patchedJar;
-        if (KettingConstants.TYPE == Type.Forge) {
-            patchedJar = KettingFileVersioned.FORGE_INSTALL_JSON;
-        }else if (KettingConstants.TYPE == Type.NeoForge) {
-            patchedJar = KettingFileVersioned.NEOFORGE_INSTALL_JSON;
-        }else {
-            throw new RuntimeException("Unsupported Type");
-        }
-        tokens.put("{PATCHED}", patchedJar.getAbsolutePath());
+        tokens.put("{PATCHED}", KettingConstants.TYPE.installJsonOrThrow().getAbsolutePath());
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
 
