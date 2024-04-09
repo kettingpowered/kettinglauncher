@@ -38,7 +38,6 @@ public class Main {
     public static final boolean DEBUG = "true".equals(System.getProperty("kettinglauncher.debug"));
     public static final String FORGE_SERVER_ARTIFACT_ID = "forge";
     public static final String NEOFORGE_SERVER_ARTIFACT_ID = "neoforge";
-    public static String NEOFORGE_FML_VERSION = "null";
     //This is used in a premain context in LibHelper, where KettingCommon might not be available yet.
     //Java is VERY nice however and inlines this at compile-time, saving us the trouble of defining this twice.
     //This will only pull the INSTALLER_LIBRARIES_FOLDER from the compileTime KettingConstants version.
@@ -250,13 +249,21 @@ public class Main {
                             KettingConstants.MCP_VERSION
                     );
                 } else if (KettingConstants.TYPE == Type.NeoForge) {
+                    String fmlVersion;
+                    
+                    try {
+                        fmlVersion = KettingFiles.FANCY_MOD_LOADER_DIR.listFiles()[0].getName();
+                    } catch (NullPointerException e) {
+                        throw new RuntimeException("Fancy Mod Loader is not installed.");
+                    }
+                    
                     launcher = Arrays.asList(
                             "--launchTarget",
                             args.launchTarget()!=null? args.launchTarget() : "forgeserver",
                             "--fml.neoForgeVersion",
                             KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
                             "--fml.fmlVersion",
-                            NEOFORGE_FML_VERSION,
+                            fmlVersion,
                             "--fml.mcVersion",
                             KettingConstants.MINECRAFT_VERSION,
                             "--fml.neoFormVersion",
@@ -296,7 +303,8 @@ public class Main {
                                     !entry.contains("org/kettingpowered/server/mclanguage")&&
                                     !entry.contains("org/kettingpowered/server/lowcodelanguage")&&
                                     !entry.contains("org/kettingpowered/server/javafmllanguage")&&
-                                    !entry.contains("org/kettingpowered/server/forge")
+                                    !entry.contains("org/kettingpowered/server/forge")&&
+                                    !entry.contains("org/kettingpowered/server/neoforge")
                                 ).collect(Collectors.joining(File.pathSeparator)),
                             "-DlibraryDirectory="+KettingConstants.INSTALLER_LIBRARIES_FOLDER,
                             "-Djava.net.preferIPv6Addresses=system"

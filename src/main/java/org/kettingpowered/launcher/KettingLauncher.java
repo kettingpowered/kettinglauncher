@@ -55,7 +55,6 @@ public class KettingLauncher {
                     Bundled_McVersion1 = attr.getValue("MinecraftVersion");
                     Bundled_ForgeVersion1 = attr.getValue("ForgeVersion");
                     Bundled_KettingVersion1 = attr.getValue("KettingVersion");
-                    Main.NEOFORGE_FML_VERSION = attr.getValue("fmlVersion");
                     String type = attr.getValue("Type");
                     if (type != null)
                         try {
@@ -160,7 +159,7 @@ public class KettingLauncher {
             }
         }
         final String fileName = Bundled_Type.typeOrThrow()+"-"+version;
-        final File folder = Bundled_Type.installDirOrThrow();
+        final File folder = new File(Bundled_Type.installDirOrThrow(), version);
         try{
             extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
         } catch (IOException e) {
@@ -370,12 +369,7 @@ public class KettingLauncher {
         downloadMCP.setName("Download-MCP");
         downloadMCP.start();
         {
-            File libsFile;
-            if(KettingConstants.TYPE == Type.Forge)
-                libsFile = KettingFileVersioned.FORGE_KETTING_LIBS;
-            else if (KettingConstants.TYPE == Type.NeoForge)
-                libsFile = KettingFileVersioned.NEOFORGE_KETTING_LIBS;
-            else throw new RuntimeException("Unsupported Type");
+            File libsFile = KettingConstants.TYPE.kettingLibsOrThrow();
 
             try (BufferedReader stream = new BufferedReader(new FileReader(libsFile))) {
                 libs.downloadExternal(
