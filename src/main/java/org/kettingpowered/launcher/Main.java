@@ -3,6 +3,7 @@ package org.kettingpowered.launcher;
 import org.kettingpowered.ketting.internal.KettingConstants;
 import org.kettingpowered.ketting.internal.KettingFileVersioned;
 import org.kettingpowered.ketting.internal.KettingFiles;
+import org.kettingpowered.ketting.internal.Type;
 import org.kettingpowered.ketting.internal.hacks.JavaHacks;
 import org.kettingpowered.ketting.internal.hacks.ServerInitHelper;
 import org.kettingpowered.launcher.dependency.*;
@@ -231,6 +232,47 @@ public class Main {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
                 System.setProperty("java.class.path", getClassPath(libraries).collect(Collectors.joining(File.pathSeparator)));
                 //noinspection unchecked
+                
+                List<String> launcher;
+                
+                if (KettingConstants.TYPE == Type.Forge) {
+                    launcher = Arrays.asList(
+                            "--launchTarget",
+                            args.launchTarget()!=null? args.launchTarget() : "forgeserver",
+                            "--fml.forgeVersion",
+                            KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
+                            "--fml.mcVersion",
+                            KettingConstants.MINECRAFT_VERSION,
+                            "--fml.forgeGroup",
+                            "org.kettingpowered.server",
+                            "--fml.mcpVersion",
+                            KettingConstants.MCP_VERSION
+                    );
+                } else if (KettingConstants.TYPE == Type.NeoForge) {
+                    String fmlVersion;
+                    
+                    try {
+                        fmlVersion = KettingFiles.FANCY_MOD_LOADER_DIR.listFiles()[0].getName();
+                    } catch (NullPointerException e) {
+                        throw new RuntimeException("Fancy Mod Loader is not installed.");
+                    }
+                    
+                    launcher = Arrays.asList(
+                            "--launchTarget",
+                            args.launchTarget()!=null? args.launchTarget() : "forgeserver",
+                            "--fml.neoForgeVersion",
+                            KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
+                            "--fml.fmlVersion",
+                            fmlVersion,
+                            "--fml.mcVersion",
+                            KettingConstants.MINECRAFT_VERSION,
+                            "--fml.neoFormVersion",
+                            KettingConstants.MCP_VERSION
+                    );
+                } else {
+                    throw new RuntimeException("Unsupported Type");
+                }
+                
                 return new List[] {
                     Arrays.asList(
                             "-p " + Arrays.stream(libraries.getLoadedLibs())
@@ -252,6 +294,8 @@ public class Main {
                             "--add-opens java.base/java.lang.invoke=cpw.mods.securejarhandler",
                             "--add-exports java.base/sun.security.util=cpw.mods.securejarhandler",
                             "--add-exports jdk.naming.dns/com.sun.jndi.dns=java.naming",
+                            "-Dfml.pluginLayerLibraries=",
+                            "-Dfml.gameLayerLibraries=",
                             "-DlegacyClassPath="+
                             //these paths below would cause a duplicate 
                             getClassPath(libraries).filter(entry->
@@ -259,23 +303,13 @@ public class Main {
                                     !entry.contains("org/kettingpowered/server/mclanguage")&&
                                     !entry.contains("org/kettingpowered/server/lowcodelanguage")&&
                                     !entry.contains("org/kettingpowered/server/javafmllanguage")&&
-                                    !entry.contains("org/kettingpowered/server/forge")
+                                    !entry.contains("org/kettingpowered/server/forge")&&
+                                    !entry.contains("org/kettingpowered/server/neoforge")
                                 ).collect(Collectors.joining(File.pathSeparator)),
                             "-DlibraryDirectory="+KettingConstants.INSTALLER_LIBRARIES_FOLDER,
                             "-Djava.net.preferIPv6Addresses=system"
                         ),
-                        Arrays.asList(
-                                "--launchTarget",
-                                args.launchTarget()!=null? args.launchTarget() : "forgeserver",
-                                "--fml.forgeVersion",
-                                KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
-                                "--fml.mcVersion",
-                                KettingConstants.MINECRAFT_VERSION,
-                                "--fml.forgeGroup",
-                                "org.kettingpowered.server",
-                                "--fml.mcpVersion",
-                                KettingConstants.MCP_VERSION
-                        )
+                        launcher
                 };
             case  "net.minecraftforge.bootstrap.ForgeBootstrap":
             default:

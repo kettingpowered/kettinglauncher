@@ -158,18 +158,8 @@ public class KettingLauncher {
                 }
             }
         }
-        final String fileName;
-        final File folder;
-        if (Bundled_Type == Type.Forge) {
-            fileName = Main.FORGE_SERVER_ARTIFACT_ID+"-"+version;
-            folder = new File(KettingFiles.KETTINGSERVER_FORGE_DIR, version);
-        }else if (Bundled_Type == Type.NeoForge) {
-            fileName = Main.NEOFORGE_SERVER_ARTIFACT_ID+"-"+version;
-            folder = new File(KettingFiles.KETTINGSERVER_NEOFORGE_DIR, version);
-        }else {
-            throw new RuntimeException("Unsupported Type");
-        }
-
+        final String fileName = Bundled_Type.typeOrThrow()+"-"+version;
+        final File folder = new File(Bundled_Type.installDirOrThrow(), version);
         try{
             extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
         } catch (IOException e) {
@@ -379,12 +369,7 @@ public class KettingLauncher {
         downloadMCP.setName("Download-MCP");
         downloadMCP.start();
         {
-            File libsFile;
-            if(KettingConstants.TYPE == Type.Forge)
-                libsFile = KettingFileVersioned.FORGE_KETTING_LIBS;
-            else if (KettingConstants.TYPE == Type.NeoForge)
-                libsFile = KettingFileVersioned.NEOFORGE_KETTING_LIBS;
-            else throw new RuntimeException("Unsupported Type");
+            File libsFile = KettingConstants.TYPE.kettingLibsOrThrow();
 
             try (BufferedReader stream = new BufferedReader(new FileReader(libsFile))) {
                 libs.downloadExternal(
@@ -435,7 +420,7 @@ public class KettingLauncher {
         
         MajorMinorPatchVersion<Integer> mc = MajorMinorPatchVersion.parse(KettingConstants.MINECRAFT_VERSION).convertMMP(Integer::parseInt);
         
-        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,2, null)) <=0 ){
+        if (mc.compareTo(new MajorMinorPatchVersion<>(1,20,2, null)) <=0 || Bundled_Type == Type.NeoForge){
             try {
                 Class.forName("cpw.mods.bootstraplauncher.BootstrapLauncher", true, cl);
                 return "cpw.mods.bootstraplauncher.BootstrapLauncher";
