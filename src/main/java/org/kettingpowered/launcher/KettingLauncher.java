@@ -144,8 +144,10 @@ public class KettingLauncher {
     private static void extractBundledContent() throws Exception {
         Exception exception = new Exception(I18n.get("error.launcher.bundle_extract_failed"));
         boolean failed = false;
-        final String version = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
-        deleteOtherVersions(version);
+        final String completeVersion = Bundled_McVersion+"-"+Bundled_ForgeVersion+"-"+Bundled_KettingVersion;
+        final String version = Bundled_Type == Type.NeoForge ? Bundled_ForgeVersion : completeVersion;
+        deleteOtherVersions(completeVersion);
+
         if (Bundled_Type == Type.Forge) {
             for (final String prefix : new String[]{"fmlloader", "fmlcore", "javafmllanguage", "lowcodelanguage", "mclanguage"}) {
                 final String fileName = prefix + "-" + version + ".jar";
@@ -159,7 +161,7 @@ public class KettingLauncher {
             }
         }
         final String fileName = Bundled_Type.typeOrThrow()+"-"+version;
-        final File folder = new File(Bundled_Type.installDirOrThrow(), version);
+        final File folder = new File(Bundled_Type.installDirOrThrow(), completeVersion);
         try{
             extractJarContent(KettingFiles.DATA_DIR+"ketting_libraries.txt", new File(folder, fileName+"-ketting-libraries.txt"));
         } catch (IOException e) {
@@ -167,7 +169,7 @@ public class KettingLauncher {
             exception.addSuppressed(e);
         }
         try{
-            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(folder, fileName+"-universal.jar"));
+            extractJarContent(KettingFiles.DATA_DIR+fileName+"-universal.jar", new File(Bundled_Type == Type.NeoForge ? new File(KettingFiles.NEOFORGE_DIR, Bundled_ForgeVersion) : folder, fileName+"-universal.jar"));
         } catch (IOException e) {
             failed=true;
             exception.addSuppressed(e);
@@ -234,9 +236,14 @@ public class KettingLauncher {
         else I18n.logError("error.launcher.update_failed");
     }
     private static void deleteOtherVersions(final String version){
-        Arrays.stream(Objects.requireNonNullElse(KettingFiles.KETTINGSERVER_FORGE_DIR.listFiles(File::isDirectory), new File[0]))
+        Arrays.stream(Objects.requireNonNullElse(Bundled_Type.installDirOrThrow().listFiles(File::isDirectory), new File[0]))
                 .filter(file -> !Objects.equals(file.getName(),version))
                 .forEach(FileUtils::deleteDir);
+        if (Bundled_Type == Type.NeoForge) {
+            Arrays.stream(Objects.requireNonNullElse(KettingFiles.NEOFORGE_DIR.listFiles(File::isDirectory), new File[0]))
+                    .filter(file -> !Objects.equals(file.getName(),version.split("-")[1]))
+                    .forEach(FileUtils::deleteDir);
+        }
     }
     
     private void ensureOneServerAndUpdate(final String mc_version) {
