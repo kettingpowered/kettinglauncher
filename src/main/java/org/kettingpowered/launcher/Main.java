@@ -261,7 +261,7 @@ public class Main {
                             "--launchTarget",
                             args.launchTarget()!=null? args.launchTarget() : "forgeserver",
                             "--fml.neoForgeVersion",
-                            KettingConstants.FORGE_VERSION+"-"+KettingConstants.KETTING_VERSION,
+                            KettingConstants.FORGE_VERSION,
                             "--fml.fmlVersion",
                             fmlVersion,
                             "--fml.mcVersion",
