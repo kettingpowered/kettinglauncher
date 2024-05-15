@@ -39,7 +39,8 @@ public class Args {
         if (containsArg("-accepteula"))
             BetterUI.forceAcceptEULA(eula);
 
-        boolean installOnly = containsArg("-installOnly");
+        boolean createLaunchScripts = containsArg("-createLaunchScripts");
+        boolean installOnly = containsArg("-installOnly") || createLaunchScripts; //run install if createLaunchScripts is enabled
         boolean dau = containsArg("-dau");
         boolean daus = containsArg("-daus");
         boolean enableServerUpdate = !(dau||daus);
@@ -53,7 +54,7 @@ public class Args {
             minecraftVersion = getArg("-minecraftVersion");
             if (minecraftVersion != null) Logger.log(LogLevel.WARN, "warn.discontinued.double_dash_minecraftVersion");
         }
-        return new ParsedArgs(Collections.unmodifiableList(args), installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion, forgeVersion, kettingVersion);
+        return new ParsedArgs(Collections.unmodifiableList(args), createLaunchScripts, installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion, forgeVersion, kettingVersion);
     }
     
     private static void printHelp(){

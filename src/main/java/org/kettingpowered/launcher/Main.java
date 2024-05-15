@@ -186,7 +186,7 @@ public class Main {
         launcher.prepareLaunch();
         String launchClass = launcher.findLaunchClass();
 
-        List<String>[] defaultArgs = getDefaultArgs(launcher.args, launcher.libs, launchClass);
+        List<String>[] defaultArgs = getDefaultArgs(launcher, launchClass, false);
 
 
         try {
@@ -225,17 +225,38 @@ public class Main {
         .map(str->str.replace(File.separatorChar, '/'))//thanks windows
         .filter(str -> !str.isBlank());
     }
-    private static List<String>[] getDefaultArgs(ParsedArgs args, Libraries libraries , String main) throws IOException {
+    public static List<String>[] getDefaultArgs(KettingLauncher launcher, String main, boolean installScript) throws IOException {
+        ParsedArgs args = launcher.args;
+        Libraries libraries = launcher.libs;
+
         switch (main) {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
                 System.setProperty("java.class.path", getClassPath(libraries).collect(Collectors.joining(File.pathSeparator)));
+
+                //these paths below would cause a duplicate
+                Stream<String> legacyCP = getClassPath(libraries).filter(entry ->
+                        !entry.contains("org/kettingpowered/server/fmlcore") &&
+                                !entry.contains("org/kettingpowered/server/mclanguage") &&
+                                !entry.contains("org/kettingpowered/server/lowcodelanguage") &&
+                                !entry.contains("org/kettingpowered/server/javafmllanguage") &&
+                                !entry.contains("org/kettingpowered/server/forge")
+                );
+
+                if (installScript) {
+                    legacyCP = legacyCP.filter(entry ->
+                            !entry.contains("commons-lang/") &&
+                            !entry.contains("cpw/mods/bootstraplauncher/")
+                    );
+                }
+
                 //noinspection unchecked
                 return new List[] {
                     Arrays.asList(
                             "-p " + Arrays.stream(libraries.getLoadedLibs())
                                     .filter(url -> 
                                             url.toString().contains("org/ow2/asm") || 
-                                            url.toString().contains("cpw/mods/securejarhandler")
+                                            url.toString().contains("cpw/mods/securejarhandler") ||
+                                            (installScript && url.toString().contains("cpw/mods/bootstraplauncher"))
                                     ).map(url-> {
                                         try {
                                             return url.toURI();
@@ -252,14 +273,7 @@ public class Main {
                             "--add-exports java.base/sun.security.util=cpw.mods.securejarhandler",
                             "--add-exports jdk.naming.dns/com.sun.jndi.dns=java.naming",
                             "-DlegacyClassPath="+
-                            //these paths below would cause a duplicate 
-                            getClassPath(libraries).filter(entry->
-                                    !entry.contains("org/kettingpowered/server/fmlcore")&&
-                                    !entry.contains("org/kettingpowered/server/mclanguage")&&
-                                    !entry.contains("org/kettingpowered/server/lowcodelanguage")&&
-                                    !entry.contains("org/kettingpowered/server/javafmllanguage")&&
-                                    !entry.contains("org/kettingpowered/server/forge")
-                                ).collect(Collectors.joining(File.pathSeparator)),
+                            legacyCP.collect(Collectors.joining(File.pathSeparator)),
                             "-DlibraryDirectory="+KettingConstants.INSTALLER_LIBRARIES_FOLDER,
                             "-Djava.net.preferIPv6Addresses=system"
                         ),
@@ -302,7 +316,7 @@ public class Main {
         }
     }
     private static void addLoadedLib(Libraries libraries, File file) throws IOException {
-        Main.INST.appendToSystemClassLoaderSearch(new JarFile(file));
+        if (Main.INST != null) Main.INST.appendToSystemClassLoaderSearch(new JarFile(file));
         libraries.addLoadedLib(file);
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * @author C0D3 M4513R
  * @param args list of unparsed args
+ * @param createLaunchScripts Create launch scripts, used to bypass the launcher
  * @param installOnly Only install the server. Don't start it.
  * @param enableServerUpdator should the server be updated
  * @param enableLauncherUpdator should the launcher (this!) be updated
@@ -18,6 +19,7 @@ import java.util.List;
  */
 public record ParsedArgs(
         @NotNull List<String> args,
+        boolean createLaunchScripts,
         boolean installOnly,
         boolean enableServerUpdator,
         boolean enableLauncherUpdator,
