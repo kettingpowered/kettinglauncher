@@ -73,6 +73,7 @@ jar{
     manifest{
         attributes 'Main-Class': mainClass
         attributes 'Launcher-Agent-Class': mainClass
+        attributes 'Premain-Class': mainClass
         attributes 'Automatic-Module-Name': 'org.kettingpowered.kettinglauncher'
         attributes([
         "Specification-Title": "Kettingpowered",

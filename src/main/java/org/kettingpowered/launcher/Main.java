@@ -45,6 +45,11 @@ public class Main {
     static Libraries libs = new Libraries();
 
     @SuppressWarnings("unused")
+    public static void premain(String agentArgs, Instrumentation inst) throws Exception {
+        agentmain(agentArgs, inst);
+    }
+
+    @SuppressWarnings("unused")
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         Logger.log(LogLevel.DEBUG, "[Agent] premain lib load start");
 
