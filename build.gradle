@@ -18,8 +18,8 @@ version = System.getenv("VERSION") ?: 'dev-env'
 
 repositories {
     mavenCentral()
-    maven { url = 'https://nexus.c0d3m4513r.com/repository/Ketting/' }
-    maven { url = 'https://nexus.c0d3m4513r.com/repository/Forge/' }
+    maven { url = 'https://nexus.c0d3m4513r.com/Ketting/' }
+    maven { url = 'https://nexus.c0d3m4513r.com/Forge/' }
 //    mavenLocal()
 }
 
@@ -128,7 +128,7 @@ publishing {
                 username = System.getenv("KETTINGUSERNAME")
                 password = System.getenv("KETTINGPASSWORD")
             }
-            url = "https://nexus.c0d3m4513r.com/repository/Ketting/"
+            url = "https://reposilite.c0d3m4513r.com/Ketting/"
         }
     }
 }
