@@ -1,8 +1,8 @@
----
 name: Bug report with the launcher (not ketting)
 about: Create a report to help us improve
 #title: ''
 labels: ''
+#assignees: ''
 body:
   - type: checkboxes
     attributes:
@@ -11,6 +11,7 @@ body:
         - label: I am using the latest Ketting launcher version at the time of writing.
         - label: I am not running my server in a onedrive folder.
         - label: I have provided full logs and not a screenshot.
+        - label: I am having an issue with ketting and not the ketting launcher.
         - label: I have checked all items without reading. 
         - label: I have provided proper reproduction steps.
   - type: input
@@ -64,4 +65,3 @@ body:
       description: Any other context (e.g. Screenshots or short Video clips) can be sent here for further clarification
     validations:
       required: false
-#assignees: ''
