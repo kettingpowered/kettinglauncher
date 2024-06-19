@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ketting issue (not the launcher)
+    url: https://github.com/kettingpowered/Ketting-1-20-x/issues
+    about: Please ask for support for ketting here.

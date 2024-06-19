@@ -1,0 +1,68 @@
+name: 'Bug report with the launcher (not ketting)'
+description: 'Create a report to help us improve'
+#title: ''
+labels: 'bug'
+#assignees: ''
+body:
+  - type: checkboxes
+    attributes:
+      label: "Basic questions:"
+      options:
+        - label: I am using the latest Ketting launcher version at the time of writing.
+        - label: I am not running my server in a onedrive folder.
+        - label: I have provided full logs and not a screenshot.
+        - label: I am having an issue with ketting and not the ketting launcher.
+        - label: I have checked all items without reading. 
+        - label: I have provided proper reproduction steps.
+  - type: input
+    attributes:
+      label: Ketting launcher Version
+      description: The Ketting launcher version number, that you are encountering the bug on.
+      placeholder: e.g. v1.3.8
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description of behavior
+      description: A clear and concise description of what the bug is, what actually happens and what you expect to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      value: |
+        Steps to reproduce the behavior:
+        1. Use above Version with
+        2. Run the server
+        3. See the error
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Logs
+      description: |
+        Please add your server's logs (just the latest logs for the initial report).
+        You can upload your server logs to https://mclo.gs or drag and drop then into the textarea below, to upload them to github.
+        https://mclo.gs will (try to) redact sensitive information (such as file paths and ip's) automatically.  
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: JVM Flags
+      description: The flags you are using to start the server (ignore this if your host doesn't let you modify your flags)
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Operating system
+      description: The operating system that is being used to run the server (ignore this if your using a host and don't know)
+      placeholder: e.g. Windows, Linux (optionally include flavor e.g. Ubuntu), BSD, MacOs
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Any other context (e.g. Screenshots or short Video clips) can be sent here for further clarification
+    validations:
+      required: false
