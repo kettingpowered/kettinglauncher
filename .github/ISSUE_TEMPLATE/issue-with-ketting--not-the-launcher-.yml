@@ -1,9 +1,9 @@
 ---
-name: Issue with ketting (NOT THE LAUNCHER)
-about: Wrong repository!
-title: I don't like reading!
-labels: ''
-assignees: ''
+name: 'Issue with ketting (NOT THE LAUNCHER)'
+description: 'Wrong repository!'
+title: 'I don't like reading!'
+labels: 'bug'
+#assignees: ''
 
 ---
 
