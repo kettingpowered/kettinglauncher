@@ -9,6 +9,7 @@ public abstract class Logger {
     private static Logger impl = new SysoutImpl();
 
     public static void setImpl(Logger impl) {
+        if (Logger.impl != null) Logger.impl._shutdown();
         Logger.impl = impl;
         I18n.logDebug("logger.impl_changed", impl.getClass().getName());
     }
@@ -47,4 +48,5 @@ public abstract class Logger {
         //Default implementation does nothing
         _log(LogLevel.INFO, message);
     }
+    protected void _shutdown() {}
 }

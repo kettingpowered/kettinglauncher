@@ -127,7 +127,7 @@ public final class Maven {
     static void downloadFromRepository(String repository, Path path, @Nullable MessageDigest digest) throws Throwable {
         if (!repository.endsWith("/")) repository = repository + "/";
         File dependencyFile = getDependencyPath(path).toFile().getAbsoluteFile();
-        URLConnection connection = NetworkUtils.getConnection(repository+path);
+        URLConnection connection = NetworkUtils.getConnection(repository+path.toString().replace(File.separatorChar, '/'));
 
         byte[] buffer = new byte[KettingLauncher.BufferSize];
         try (BufferedInputStream inputStream = new BufferedInputStream(connection.getInputStream())) {

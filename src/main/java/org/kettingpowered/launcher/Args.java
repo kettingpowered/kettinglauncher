@@ -39,7 +39,8 @@ public class Args {
         if (containsArg("-accepteula"))
             BetterUI.forceAcceptEULA(eula);
 
-        boolean installOnly = containsArg("-installOnly");
+        boolean createLaunchScripts = containsArg("-createLaunchScripts");
+        boolean installOnly = containsArg("-installOnly") || createLaunchScripts; //run install if createLaunchScripts is enabled
         boolean dau = containsArg("-dau");
         boolean daus = containsArg("-daus");
         boolean enableServerUpdate = !(dau||daus);
@@ -53,7 +54,7 @@ public class Args {
             minecraftVersion = getArg("-minecraftVersion");
             if (minecraftVersion != null) Logger.log(LogLevel.WARN, "warn.discontinued.double_dash_minecraftVersion");
         }
-        return new ParsedArgs(Collections.unmodifiableList(args), installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion, forgeVersion, kettingVersion);
+        return new ParsedArgs(Collections.unmodifiableList(args), createLaunchScripts, installOnly, enableServerUpdate, enableLauncherUpdate, target, minecraftVersion, forgeVersion, kettingVersion);
     }
     
     private static void printHelp(){
@@ -61,17 +62,18 @@ public class Args {
         System.out.println("-".repeat(KettingConstants.NAME.length() + 5));
         System.out.println("Usage: java -jar your-jar-name.jar [options]");
         System.out.println("Options:");
-        System.out.println("  -help               Shows this help message");
-        System.out.println("  -noui               Disables the fancy UI");
-        System.out.println("  -nologo             Disables the big logo");
-        System.out.println("  -accepteula         Accepts the EULA automatically");
-        System.out.println("  -dau or -daus       Disables automatic server updates");
-        System.out.println("  -daul               Disables automatic launcher updates");
-        System.out.println("  -installOnly        Stop the launcher, after the server has been installed.");
-        System.out.println("  -minecraftVersion   Sets the Minecraft Version of the Server. Will update the server to this version, if a Ketting version on another Minecraft Version is used.");
-        System.out.println("  --minecraftVersion  See above, except it's depracticed. Swap to the one above, for the exact same effect.");
-        System.out.println("  -forgeVersion       Sets the Forge Version of the Server. Will update the server to this version, if a Ketting version on another Forge or Minecraft Version is used.");
-        System.out.println("  -kettingVersion     Sets the Ketting Version of the Server. Will update the server to this version, if a Ketting version on another Ketting or Minecraft Version is used.");
+        System.out.println("  -help                Shows this help message");
+        System.out.println("  -noui                Disables the fancy UI");
+        System.out.println("  -nologo              Disables the big logo");
+        System.out.println("  -accepteula          Accepts the EULA automatically");
+        System.out.println("  -dau or -daus        Disables automatic server updates");
+        System.out.println("  -daul                Disables automatic launcher updates");
+        System.out.println("  -createLaunchScripts Creates launch scripts to launch Ketting directly");
+        System.out.println("  -installOnly         Stop the launcher, after the server has been installed.");
+        System.out.println("  -minecraftVersion    Sets the Minecraft Version of the Server. Will update the server to this version, if a Ketting version on another Minecraft Version is used.");
+        System.out.println("  --minecraftVersion   See above, except it's depracticed. Swap to the one above, for the exact same effect.");
+        System.out.println("  -forgeVersion        Sets the Forge Version of the Server. Will update the server to this version, if a Ketting version on another Forge or Minecraft Version is used.");
+        System.out.println("  -kettingVersion      Sets the Ketting Version of the Server. Will update the server to this version, if a Ketting version on another Ketting or Minecraft Version is used.");
         System.out.println("Development|Unstable Options:");
         System.out.println("  --launchTarget      Sets the default launchTarget. Exists mostly for debug purposes for forge. We reserve the right to ignore this (e.g. if it's unsupported by the target server version )");
     }
