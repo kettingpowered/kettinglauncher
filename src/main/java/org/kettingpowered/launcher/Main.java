@@ -215,7 +215,7 @@ public class Main {
                     .invoke(null, (Object) launchArgs.toArray(String[]::new));
         } catch (Throwable e) {
             Logger.log(I18n.get("error.launcher.launch_failure"), e);
-            System.exit(255);
+            Runtime.getRuntime().halt(255);
         }
     }
     private static Stream<String> getClassPath(Libraries libraries){
