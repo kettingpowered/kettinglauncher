@@ -239,6 +239,11 @@ public class Main {
             case "cpw.mods.bootstraplauncher.BootstrapLauncher":
                 System.setProperty("java.class.path", getClassPath(libraries).collect(Collectors.joining(File.pathSeparator)));
 
+                String[] modulePathInclusions = new String[] {
+                        "net/minecraftforge/JarJarFileSystems/",
+                        "cpw/mods/bootstraplauncher/",
+                };
+
                 //these paths below would cause a duplicate
                 Stream<String> legacyCP = getClassPath(libraries).filter(entry ->
                         !entry.contains("org/kettingpowered/server/fmlcore") &&
@@ -246,12 +251,11 @@ public class Main {
                                 !entry.contains("org/kettingpowered/server/lowcodelanguage") &&
                                 !entry.contains("org/kettingpowered/server/javafmllanguage") &&
                                 !entry.contains("org/kettingpowered/server/forge")
-                );
+                ).filter(entry -> Arrays.stream(modulePathInclusions).noneMatch(entry::contains));
 
                 if (installScript) {
                     legacyCP = legacyCP.filter(entry ->
-                            !entry.contains("commons-lang/") &&
-                            !entry.contains("cpw/mods/bootstraplauncher/")
+                            !entry.contains("commons-lang/")
                     );
                 }
 
@@ -260,9 +264,9 @@ public class Main {
                     Arrays.asList(
                             "-p " + Arrays.stream(libraries.getLoadedLibs())
                                     .filter(url -> 
-                                            url.toString().contains("org/ow2/asm") || 
+                                            url.toString().contains("org/ow2/asm") ||
                                             url.toString().contains("cpw/mods/securejarhandler") ||
-                                            (installScript && url.toString().contains("cpw/mods/bootstraplauncher"))
+                                            Arrays.stream(modulePathInclusions).anyMatch(url.toString()::contains)
                                     ).map(url-> {
                                         try {
                                             return url.toURI();
