@@ -88,7 +88,7 @@ public class MCVersion {
         {
             I18n.log("info.mc_version.manual_enter");
             I18n.log("info.mc_version.manual_enter.supported", String.join(", ", supportedMcVersions));
-            System.out.print(I18n.get("info.mc_version.manual_enter.prompt"));
+            System.out.print(I18n.get("info.mc_version.manual_enter.prompt") + " ");
 
             int wrong = 0;
 
