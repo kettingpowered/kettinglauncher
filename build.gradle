@@ -47,7 +47,7 @@ dependencies {
 
     //Used in Processors
     implementation 'net.minecraftforge:binarypatcher:1.2.0:fatjar'
-    implementation 'net.minecraftforge:installertools:1.4.0'
+    implementation 'net.minecraftforge:installertools:1.4.3'
     implementation 'net.minecraftforge:jarsplitter:1.1.4'
     implementation 'net.minecraftforge:ForgeAutoRenamingTool:1.0.6'
     implementation 'org.jetbrains:annotations:24.0.0'

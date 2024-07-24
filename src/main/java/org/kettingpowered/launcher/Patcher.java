@@ -115,6 +115,7 @@ public class Patcher {
         tokens.put("{MC_SLIM}", KettingFileVersioned.SERVER_SLIM.getAbsolutePath());
         tokens.put("{MC_EXTRA}", KettingFileVersioned.SERVER_EXTRA.getAbsolutePath());
         tokens.put("{MC_SRG}", KettingFileVersioned.SERVER_SRG.getAbsolutePath());
+        tokens.put("{MC_OFF}", KettingFileVersioned.SERVER_SRG.getAbsolutePath()); //Basically the same as the one above
         tokens.put("{PATCHED}", KettingFileVersioned.FORGE_PATCHED_JAR.getAbsolutePath());
         tokens.put("{BINPATCH}", KettingFiles.SERVER_LZMA.getAbsolutePath());
     }
