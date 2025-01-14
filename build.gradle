@@ -20,6 +20,8 @@ repositories {
     mavenCentral()
     maven { url = 'https://nexus.c0d3m4513r.com/Ketting/' }
     maven { url = 'https://nexus.c0d3m4513r.com/Forge/' }
+    maven { url = 'https://repo.kettingpowered.org/Ketting' }
+    maven { url = 'https://repo.kettingpowered.org/Forge' }
 //    mavenLocal()
 }
 
@@ -129,6 +131,14 @@ publishing {
                 password = System.getenv("KETTINGPASSWORD")
             }
             url = "https://reposilite.c0d3m4513r.com/Ketting/"
+        }
+        maven {
+            name = 'kettingRepo-backup'
+            credentials {
+                username = System.getenv("KETTINGUSERNAME")
+                password = System.getenv("KETTINGPASSWORD")
+            }
+            url = "https://repo.kettingpowered.org/Ketting/"
         }
     }
 }
