@@ -124,7 +124,6 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
-        /*
         maven {
             name = 'kettingRepo'
             credentials {
@@ -133,7 +132,6 @@ publishing {
             }
             url = "https://reposilite.c0d3m4513r.com/Ketting/"
         }
-        */
         maven {
             name = 'kettingRepo-backup'
             credentials {
