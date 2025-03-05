@@ -45,7 +45,7 @@ These arguments are subject to change, and may not work in future versions. For 
 | Argument                      | Description                                       |
 |-------------------------------|---------------------------------------------------|
 | `-help`                       | Shows the help menu                               |
-| `-noui`                       | Disables the fancy UI                             |
+| `-noui`                       | Disables the fancy UI (DOESN'T DISABLE GUI.) [^3] |
 | `-nologo`                     | Disables the big logo                             |
 | `-accepteula`                 | Accepts the EULA automatically                    |
 | `-dau or -daus`               | Disables automatic server updates                 |
@@ -96,3 +96,5 @@ Feel free to join our [Discord server][discord-invite] and ask your question the
 [^1]: only if Ketting supports it
 
 [^2]: This argument will not update the Minecraft Version. If the current Server Minecraft Version is detected to be `1.20.1`, but e.g. `forgeVersion` is set to `48.1.0`, it won't update to `1.20.2`.
+
+[^3]: `-noui` disables the code that prints all the versions of the server. `-noui` implies `-nologo`. If you instead want to disable the gui of the minecraft server, use `-nogui`. The Argument `-nogui` is not listed here, since it's an argument, which is handled by the Minecraft server.
