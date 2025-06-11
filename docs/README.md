@@ -93,6 +93,10 @@ Make sure that the bug is not already reported on the [issue tracker][issues]. I
 
 Feel free to join our [Discord server][discord-invite] and ask your question there.
 
+### I want the launcher to prefer custom Maven Repos, over its built-in ones.
+
+Put your maven-repository urls (one per line) inside a file named `maven_repos.txt` in the same directory as the launcher.
+
 [^1]: only if Ketting supports it
 
 [^2]: This argument will not update the Minecraft Version. If the current Server Minecraft Version is detected to be `1.20.1`, but e.g. `forgeVersion` is set to `48.1.0`, it won't update to `1.20.2`.
