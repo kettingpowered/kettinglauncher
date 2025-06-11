@@ -19,7 +19,7 @@ public final class AvailableMavenRepos {
         try {
             File repos = new File("maven_repos.txt");
             if (repos.exists() && repos.isFile()) {
-                List<String> customRepos = new BufferedReader(new FileReader(repos)).lines().filter(v -> !v.isEmpty()).toList();
+                List<String> customRepos = new BufferedReader(new FileReader(repos)).lines().filter(v -> !v.isEmpty()).distinct().toList();
                 Logger.log(LogLevel.INFO, I18n.get("info.maven.repo_overrides"), String.join(", ", customRepos));
                 instance.addAll(customRepos);
             }
