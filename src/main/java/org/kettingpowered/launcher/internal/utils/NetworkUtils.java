@@ -2,11 +2,11 @@ package org.kettingpowered.launcher.internal.utils;
 
 import org.jetbrains.annotations.Nullable;
 import org.kettingpowered.ketting.internal.KettingConstants;
+ import org.kettingpowered.launcher.KettingLauncher;
 import org.kettingpowered.launcher.lang.I18n;
+import org.kettingpowered.launcher.log.Logger;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
@@ -32,13 +32,26 @@ public class NetworkUtils {
         thread.setName("network-utils-download-thread-"+threadNr.incrementAndGet());
         return thread;
     });
+    private static final String userAgent;
+    static {
+        final File file = new File("useragent.txt");
+        String toSetUserAgent = String.format("KettingLauncher %s", KettingLauncher.Version);
+        if (file.exists() && file.isFile())
+            try {
+                toSetUserAgent = new BufferedReader(new FileReader(file)).readLine();
+                Logger.log(I18n.get("info.useragent.custom"), toSetUserAgent);
+            } catch (Throwable e) {
+                Logger.log(I18n.get("error.useragent.override_file_failed"), e);
+            }
+        userAgent = toSetUserAgent;
+    }
 
 
     public static URLConnection getConnection(String url) {
         URLConnection conn = null;
         try {
             conn = new URL(url).openConnection();
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0");
+            conn.setRequestProperty("User-Agent", userAgent);
 
             int timeout = (int) TimeUnit.SECONDS.toMillis(60);
             conn.setConnectTimeout(timeout);

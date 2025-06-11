@@ -93,9 +93,15 @@ Make sure that the bug is not already reported on the [issue tracker][issues]. I
 
 Feel free to join our [Discord server][discord-invite] and ask your question there.
 
-### I want the launcher to prefer custom Maven Repos, over its built-in ones.
+### Is there a list of magic files?
 
-Put your maven-repository urls (one per line) inside a file named `maven_repos.txt` in the same directory as the launcher.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|File-Name        | Structure                                   | Purpose                                                                                                                                                      |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|`maven_repos.txt`| The file should consist of one URL per Line | Each URL will be interpreted as a Maven-Repository, to download dependencies from. They will be preferred over any other built-in Maven-Repositories         |
+|`mcversion.txt`  | The Minecraft Version to be Launched        | The file should ONLY consist of the Minecraft-Version to be launched and nothing else.                                                                       |
+|`useragent.txt`  | The String to use as a User-Agent           | The Launcher will use this Value as the User-Agent when downloading Libraries. Only the first line will be used.                                             |
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 [^1]: only if Ketting supports it
 
