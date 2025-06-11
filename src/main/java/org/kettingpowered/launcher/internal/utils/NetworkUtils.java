@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 //Inspired by https://git.magmafoundation.org/JustRed23/Magma-1-18-x/-/blob/1.18.x/magmalauncher/src/main/java/org/magmafoundation/magma/installer/NetworkUtils.java
+//Archived Url: https://magma.c0d3m4513r.com/mirror/src/Magma-1-18-x/magmalauncher/src/main/java/org/magmafoundation/magma/installer/NetworkUtils.java
 //But changed a bit over time.
 @SuppressWarnings("CallToPrintStackTrace")
 public class NetworkUtils {
