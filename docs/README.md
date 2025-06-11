@@ -95,9 +95,9 @@ Feel free to join our [Discord server][discord-invite] and ask your question the
 
 ### Is there a list of magic files?
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 |File-Name        | Structure                                   | Purpose                                                                                                                                                      |
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|-----------------|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |`maven_repos.txt`| The file should consist of one URL per Line | Each URL will be interpreted as a Maven-Repository, to download dependencies from. They will be preferred over any other built-in Maven-Repositories         |
 |`mcversion.txt`  | The Minecraft Version to be Launched        | The file should ONLY consist of the Minecraft-Version to be launched and nothing else.                                                                       |
 |`useragent.txt`  | The String to use as a User-Agent           | The Launcher will use this Value as the User-Agent when downloading Libraries. Only the first line will be used.                                             |
