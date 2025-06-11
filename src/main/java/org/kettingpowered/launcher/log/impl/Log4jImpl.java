@@ -19,7 +19,7 @@ public class Log4jImpl extends Logger {
     }
 
     protected void _log(LogLevel level, String message, Object... args) {
-        LOGGER.log(level.toLog4jLevel(), message, args);
+        LOGGER.log(level.toLog4jLevel(), String.format(message, args));
     }
 
     protected void _log(LogLevel level, String message, Throwable throwable) {
