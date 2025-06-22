@@ -23,7 +23,7 @@ Ketting Launcher is an all-in-one launcher for all Ketting versions. This can es
 
 ### Before running the launcher
 
-- Make sure that you have Java 17 installed. You can download it [here](https://adoptium.net/temurin/archive/?version=17).
+- Make sure that you have Java 17 installed. You can download it [here](https://adoptium.net/temurin/releases/?os=any&arch=any&version=17).
 - Make sure you are in a clean directory, as the launcher will download all the files it needs to run in the current directory. **Do not run the launcher jar in your downloads folder!**
 
 ### Running the launcher
